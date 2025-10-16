@@ -39,6 +39,7 @@ export const loginUser = async (req, res) => {
         patientHistory: user.patientHistory || null,
         doctorDetails: user.doctorDetails || null,
         hospital: user.hospital || null,
+        token,
       },
     });
   } catch (err) {

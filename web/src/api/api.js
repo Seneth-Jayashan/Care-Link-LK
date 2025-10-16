@@ -1,27 +1,24 @@
 import axios from "axios";
-import { useAuth } from "../contexts/AuthContext";
 
-// Base Axios instance
+// Create base axios instance
 const api = axios.create({
-  baseURL: "http://localhost:3001/api/v1", // backend base URL
-  withCredentials: true, // for cookies / JWT refresh if needed
+  baseURL: "http://localhost:3001/api/v1",
+  withCredentials: true, // for cookies / JWT if needed
 });
 
-// Optional: attach JWT token from AuthContext if needed
-export const useApi = () => {
-  const { user } = useAuth();
-
-  api.interceptors.request.use(
-    (config) => {
+// Attach token to all requests automatically
+api.interceptors.request.use(
+  (config) => {
+    const savedUser = localStorage.getItem("authUser");
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
       if (user?.token) {
         config.headers.Authorization = `Bearer ${user.token}`;
       }
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
-
-  return api;
-};
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default api;
