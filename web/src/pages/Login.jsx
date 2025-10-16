@@ -1,42 +1,30 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ""
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
     const newErrors = {};
+    if (!formData.email) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    }
+    if (!formData.password) newErrors.password = "Password is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -44,17 +32,18 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
+    setErrors({});
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log("Login attempt:", formData);
-      alert("Login successful!");
-    } catch (error) {
-      setErrors({ submit: "Invalid credentials. Please try again." });
+      await login(formData.email, formData.password);
+      navigate("/dashboard"); // redirect to dashboard after login
+    } catch (err) {
+      setErrors({
+        submit: err.response?.data?.message || "Invalid credentials. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -68,19 +57,13 @@ const LoginPage = () => {
         transition={{ duration: 0.5 }}
         className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8"
       >
-        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome Back
-          </h1>
-          <p className="text-gray-600">
-            Sign in to your account
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+          <p className="text-gray-600">Sign in to your account</p>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Field */}
+          {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
@@ -101,14 +84,10 @@ const LoginPage = () => {
                 placeholder="Enter your email"
               />
             </div>
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.email}
-              </p>
-            )}
+            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
           </div>
 
-          {/* Password Field */}
+          {/* Password */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
               Password
@@ -133,45 +112,13 @@ const LoginPage = () => {
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                )}
+                {showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
               </button>
             </div>
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.password}
-              </p>
-            )}
+            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
           </div>
 
-          {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a
-                href="#"
-                className="font-medium text-blue-600 hover:text-blue-500 transition"
-              >
-                Forgot your password?
-              </a>
-            </div>
-          </div>
-
-          {/* Submit Button */}
+          {/* Submit */}
           <motion.button
             type="submit"
             disabled={isLoading}
@@ -186,8 +133,7 @@ const LoginPage = () => {
               </>
             ) : (
               <>
-                Sign In
-                <ArrowRight size={18} />
+                Sign In <ArrowRight size={18} />
               </>
             )}
           </motion.button>
@@ -209,13 +155,8 @@ const LoginPage = () => {
               <span className="px-2 bg-white text-gray-500">New to our platform?</span>
             </div>
           </div>
-
-          {/* Sign Up Link */}
           <div className="mt-4 text-center">
-            <a
-              href="#"
-              className="font-medium text-blue-600 hover:text-blue-500 transition"
-            >
+            <a href="/register" className="font-medium text-blue-600 hover:text-blue-500 transition">
               Create a new account
             </a>
           </div>

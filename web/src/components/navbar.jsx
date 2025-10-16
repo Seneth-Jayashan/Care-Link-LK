@@ -1,39 +1,46 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, Stethoscope } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, logout } = useAuth();
 
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  // Default public links
   const navItems = [
+<<<<<<< Updated upstream
     { name: "Home", href: "#" },
     { name: "About Us", href: "/aboutus" },
     { name: "Contact Us", href: "#" }
+=======
+    { name: "Home", to: "/" },
+    { name: "About Us", to: "/about" },
+    { name: "Contact Us", to: "/contact" }
+>>>>>>> Stashed changes
   ];
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  // Role-based links
+  const roleLinks = {
+    patient: [{ name: "Patient Dashboard", to: "/patient" }],
+    doctor: [{ name: "Doctor Dashboard", to: "/doctor" }],
+    hospitaladmin: [{ name: "Hospital Dashboard", to: "/hospital" }],
+    admin: [{ name: "Admin Panel", to: "/admin" }]
   };
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
+  const userLinks = user ? roleLinks[user.role] || [] : [];
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
+  const allLinks = navItems.concat(userLinks);
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center"
-          >
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Stethoscope className="text-white" size={18} />
@@ -42,26 +49,29 @@ const Navbar = () => {
             </div>
           </motion.div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item, index) => (
-              <motion.a
-                key={item.name}
-                href={item.href}
+            {allLinks.map((item, index) => (
+              <motion.div
+                key={item.to}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+                transition={{ delay: index * 0.05 }}
               >
-                {item.name}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
-              </motion.a>
+                <Link
+                  to={item.to}
+                  className="text-gray-700 hover:text-blue-600 font-medium relative group"
+                >
+                  {item.name}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+                </Link>
+              </motion.div>
             ))}
           </div>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {isLoggedIn ? (
+            {user ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -71,37 +81,31 @@ const Navbar = () => {
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <User className="text-blue-600" size={16} />
                   </div>
-                  <span className="font-medium">Welcome!</span>
+                  <span className="font-medium">{user.name}</span>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={handleLogout}
+                  onClick={logout}
                   className="px-4 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
                 >
                   Logout
                 </motion.button>
               </motion.div>
             ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center space-x-3"
-              >
+              <Link to="/login">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={handleLogin}
                   className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
                 >
-                  <User size={16} />
-                  Login
+                  <User size={16} /> Login
                 </motion.button>
-              </motion.div>
+              </Link>
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -123,53 +127,40 @@ const Navbar = () => {
               className="md:hidden border-t border-gray-200"
             >
               <div className="py-4 space-y-4">
-                {navItems.map((item, index) => (
-                  <motion.a
-                    key={item.name}
-                    href={item.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors"
+                {allLinks.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="block text-gray-700 hover:text-blue-600 font-medium py-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.name}
-                  </motion.a>
+                  </Link>
                 ))}
-                
-                {/* Mobile Auth Buttons */}
+
+                {/* Mobile Auth */}
                 <div className="pt-4 border-t border-gray-200">
-                  {isLoggedIn ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2 text-gray-700">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="text-blue-600" size={16} />
-                        </div>
-                        <span className="font-medium">Welcome!</span>
-                      </div>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          handleLogout();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full px-4 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                      >
-                        Logout
-                      </motion.button>
-                    </div>
-                  ) : (
+                  {user ? (
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
-                        handleLogin();
+                        logout();
                         setIsMenuOpen(false);
                       }}
-                      className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                      className="w-full px-4 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
                     >
-                      <User size={16} />
-                      Login
+                      Logout
                     </motion.button>
+                  ) : (
+                    <Link to="/login">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Login
+                      </motion.button>
+                    </Link>
                   )}
                 </div>
               </div>
