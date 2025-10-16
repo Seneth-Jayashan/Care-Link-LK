@@ -75,10 +75,10 @@ function App() {
             }
           />
           <Route
-            path="/admin"
+            path="/admin/*"
             element={
               <PrivateRoute roles={["admin"]}>
-                <AdminPanel />
+                <AdminDashboard />
               </PrivateRoute>
             }
           />

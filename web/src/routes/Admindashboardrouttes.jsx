@@ -2,9 +2,9 @@ import { Routes, Route } from "react-router-dom";
 
 import AdminDashboard from "../pages/admin/Dashboard";
 
-import AddHospitalManager from "../pages/admin/hospitaladmin/Add";
-import EditHospitalManager from "../pages/admin/hospitaladmin/Edit";
-import DeleteHospitalManager from "../pages/admin/hospitaladmin/Delete";
+import AddHospitalManager from "../pages/admin/hospitalamanager/Add";
+import EditHospitalManager from "../pages/admin/hospitalamanager/Edit";
+import DeleteHospitalManager from "../pages/admin/hospitalamanager/Delete";
 
 export default function Admindashboardrouttes() {
     return (
