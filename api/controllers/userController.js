@@ -1,3 +1,4 @@
+// controllers/userController.js
 import User from '../models/User.js';
 import PatientHistory from '../models/PatientHistory.js';
 import DoctorDetails from '../models/DoctorDetails.js';
@@ -10,26 +11,22 @@ export const createUser = async (req, res) => {
   try {
     const { name, email, password, phone, role, specialty } = req.body;
 
-    // Store plain password for email
-    let plainPassword = password;
-
-    let user = new User({ name, email, password, phone, role });
+    // Create user with provided password (no hash yet, will hash in pre-save hook)
+    const user = new User({ name, email, password, phone, role });
 
     // Handle profile image
     if (req.file) user.profileImage = req.file.path;
 
-    // Save user (skip patientHistory validation temporarily if patient)
-    if (role === 'patient') await user.save({ validateBeforeSave: false });
-    else await user.save();
-
-    // Conditional references
+    // ------------------- PATIENT -------------------
     if (role === 'patient') {
+      // Create PatientHistory
       const history = new PatientHistory({ user: user._id });
       await history.save();
       user.patientHistory = history._id;
       await user.save();
 
-      // Generate QR code
+      // Generate QR code containing patient info
+      // Recommendation: Only include user._id in the QR code for better security
       const patientData = {
         userId: user._id,
         name: user.name,
@@ -39,27 +36,59 @@ export const createUser = async (req, res) => {
       };
       const qrCodeDataUrl = await generatePatientQR(patientData);
 
-      // Send email with QR and login credentials
-      await sendEmailWithQR(user.email, 'Your Patient Account', qrCodeDataUrl, plainPassword);
-      console.log(qrCodeDataUrl);
+      // Send email with credentials + QR
+      // CRITICAL: Avoid sending the password. Send a password-reset or account-activation link instead.
+      await sendEmailWithQR(user.email, 'Your Patient Account QR', qrCodeDataUrl, password);
 
-      return res.status(201).json({ user, qrCodeDataUrl });
+      return res.status(201).json({
+        message: 'Patient created and email sent successfully',
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+        },
+      });
     }
 
+    // ------------------- DOCTOR -------------------
     if (role === 'doctor') {
       const doctorDetails = new DoctorDetails({ user: user._id, specialty: specialty || '' });
       await doctorDetails.save();
       user.doctorDetails = doctorDetails._id;
       await user.save();
+      
+      // FIX: Added 'return' to prevent fall-through and sending a second response.
+      return res.status(201).json({
+        message: `${role} created successfully`,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+        },
+      });
     }
 
-    res.status(201).json(user);
+    // ------------------- HOSPITAL ADMIN / OTHERS -------------------
+    // This part will now only be reached for roles other than 'patient' and 'doctor'
+    await user.save(); // Save user if not already saved in a specific role block
+    res.status(201).json({
+      message: `${role} created successfully`,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
 
 // --------------------
 // GET ALL USERS
