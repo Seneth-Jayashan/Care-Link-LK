@@ -50,9 +50,6 @@ const userSchema = new mongoose.Schema(
     hospital: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Hospital',
-      required: function() {
-        return this.role === 'hospitaladmin';
-      },
     },
   },
   {

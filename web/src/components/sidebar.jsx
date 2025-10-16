@@ -52,9 +52,8 @@ const Sidebar = () => {
         name: "Hospital Managers",
         icon: Building2,
         children: [
+          { name: "View All", to: "/admin" },
           { name: "Add", to: "/admin/add-hospital-manager" },
-          { name: "Edit", to: "/admin/edit-hospital-manager" },
-          { name: "Delete", to: "/admin/delete-hospital-manager" },
         ],
       },
       { name: "Users", to: "/admin/users", icon: Users },

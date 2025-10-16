@@ -13,8 +13,8 @@ export default function Admindashboardrouttes() {
             <Route path="/" element={<AdminDashboard />} />
 
             <Route path="/add-hospital-manager" element={<AddHospitalManager />} />
-            <Route path="/edit-hospital-manager" element={<EditHospitalManager />} />
-            <Route path="/delete-hospital-manager" element={<DeleteHospitalManager />} />
+            <Route path="/edit-hospital-manager/:id" element={<EditHospitalManager />} />
+            <Route path="/delete-hospital-manager/:id" element={<DeleteHospitalManager />} />
         </Routes>
     );
 }
