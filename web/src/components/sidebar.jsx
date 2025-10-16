@@ -12,11 +12,19 @@ import {
   Home,
   Building2,
   User,
+  ChevronDown,
 } from "lucide-react";
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [openAdminHM, setOpenAdminHM] = React.useState(() =>
+    [
+      "/admin/add-hospital-manager",
+      "/admin/edit-hospital-manager",
+      "/admin/delete-hospital-manager",
+    ].some((p) => location.pathname.startsWith(p))
+  );
 
   // Role-based sidebar links
   const roleMenus = {
@@ -40,7 +48,14 @@ const Sidebar = () => {
     ],
     admin: [
       { name: "System Dashboard", to: "/admin", icon: LayoutDashboard },
-      { name: "Hospitals", to: "/admin/hospitals", icon: Building2 },
+      {
+        name: "Hospital Managers",
+        icon: Building2,
+        children: [
+          { name: "View All", to: "/admin" },
+          { name: "Add", to: "/admin/add-hospital-manager" },
+        ],
+      },
       { name: "Users", to: "/admin/users", icon: Users },
       { name: "System Settings", to: "/admin/settings", icon: Settings },
     ],
@@ -67,12 +82,65 @@ const Sidebar = () => {
 
       {/* Menu Items */}
       <div className="flex-1 overflow-y-auto py-4">
-        {menus.map((item) => {
+        {menus.map((item, idx) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.to;
 
+          // Submenu (e.g., Admin -> Hospital Managers)
+          if (item.children && item.children.length > 0) {
+            const anyChildActive = item.children.some((c) =>
+              location.pathname.startsWith(c.to)
+            );
+            const open = anyChildActive || openAdminHM;
+            return (
+              <div key={`submenu-${idx}`} className="mb-1">
+                <motion.div
+                  whileHover={{ scale: 0.98 }}
+                  onClick={() => setOpenAdminHM((v) => !v)}
+                  className={`flex items-center justify-between px-6 py-3 rounded-lg cursor-pointer ${
+                    open || anyChildActive
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    {Icon && <Icon size={18} className="mr-3" />}
+                    <span className="font-medium">{item.name}</span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform ${open ? "rotate-180" : "rotate-0"}`}
+                  />
+                </motion.div>
+
+                {open && (
+                  <div className="mt-1 ml-10">
+                    {item.children.map((child) => {
+                      const childActive = location.pathname.startsWith(child.to);
+                      return (
+                        <Link key={child.to} to={child.to}>
+                          <motion.div
+                            whileHover={{ scale: 0.98 }}
+                            className={`px-3 py-2 rounded-md mb-1 text-sm ${
+                              childActive
+                                ? "bg-blue-100 text-blue-700 font-semibold"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {child.name}
+                          </motion.div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // Regular menu item
+          const isActive = location.pathname === item.to;
           return (
-            <Link key={item.to} to={item.to}>
+            <Link key={item.to || `${item.name}-${idx}`} to={item.to}>
               <motion.div
                 whileHover={{ scale: 0.9 }}
                 className={`flex items-center px-6 py-3 mb-1 rounded-lg cursor-pointer ${
@@ -81,7 +149,7 @@ const Sidebar = () => {
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                <Icon size={18} className="mr-3" />
+                {Icon && <Icon size={18} className="mr-3" />}
                 <span>{item.name}</span>
               </motion.div>
             </Link>
