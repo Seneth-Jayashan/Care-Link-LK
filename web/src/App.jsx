@@ -1,105 +1,80 @@
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
-import AddHospital from './pages/hospitaladmin/AddHospital'
-import Aboutus from './pages/Aboutus'
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
-=======
-=======
->>>>>>> Stashed changes
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Home from "./pages/Home";
+import Login from "./pages/Login";
 
-// Pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import AdminPage from './pages/admin/Dashboard';
-import HospitalAdmin from './pages/hospitaladmin/Dashboard';
-import PatientPage from './pages/patient/Dashboard';
-import DoctorPage from './pages/doctor/Dashboard'
+// Role-based pages
+import PatientDashboard from "./pages/patient/Dashboard";
+import DoctorDashboard from "./pages/doctor/Dashboard";
+import HospitalDashboard from "./pages/hospitaladmin/Dashboard";
+import AdminPanel from "./pages/admin/Dashboard";
 
-// Protected Route
-import ProtectedRoute from './components/auth/ProtectedRoute';
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+import { useAuth } from "./contexts/AuthContext";
+
+// PrivateRoute Component
+const PrivateRoute = ({ children, roles }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div>Loading...</div>;
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+
+  return children;
+};
 
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      <Routes>
-      
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/add-hospital" element={<AddHospital />} />
-        <Route path="/aboutus" element={<Aboutus />} />
-        
-      </Routes>
-=======
-=======
->>>>>>> Stashed changes
-
-      <main className="flex-1">
+      <div className="flex-1">
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
 
-
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute roles={['admin']}>
-                <AdminPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/hospitaladmin"
-            element={
-              <ProtectedRoute roles={['hospitaladmin']}>
-                <HospitalAdmin />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/doctor"
-            element={
-              <ProtectedRoute roles={['doctor']}>
-                <DoctorPage />
-              </ProtectedRoute>
-            }
-          />
-
+          {/* Protected routes */}
           <Route
             path="/patient"
             element={
-              <ProtectedRoute roles={['patient']}>
-                <PatientPage />
-              </ProtectedRoute>
+              <PrivateRoute roles={["patient"]}>
+                <PatientDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/doctor"
+            element={
+              <PrivateRoute roles={["doctor"]}>
+                <DoctorDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/hospital"
+            element={
+              <PrivateRoute roles={["hospitaladmin"]}>
+                <HospitalDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <AdminPanel />
+              </PrivateRoute>
             }
           />
 
+          {/* Fallback route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </main>
-
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+      </div>
       <Footer />
     </div>
   );

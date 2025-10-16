@@ -12,21 +12,9 @@ const Navbar = () => {
 
   // Default public links
   const navItems = [
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    { name: "Home", href: "#" },
-    { name: "About Us", href: "/aboutus" },
-    { name: "Contact Us", href: "#" }
-=======
     { name: "Home", to: "/" },
     { name: "About Us", to: "/about" },
     { name: "Contact Us", to: "/contact" }
->>>>>>> Stashed changes
-=======
-    { name: "Home", to: "/" },
-    { name: "About Us", to: "/about" },
-    { name: "Contact Us", to: "/contact" }
->>>>>>> Stashed changes
   ];
 
   // Role-based links
