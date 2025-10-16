@@ -43,6 +43,7 @@ const Sidebar = () => {
       { name: "Dashboard", to: "/hospital", icon: LayoutDashboard },
       { name: "Doctors", to: "/hospital/doctors", icon: Stethoscope },
       { name: "Patients", to: "/hospital/patients", icon: HeartPulse },
+      { name: "Hospital", to: "/hospital/details", icon: Building2 },
       { name: "Settings", to: "/hospital/settings", icon: Settings },
     ],
     admin: [

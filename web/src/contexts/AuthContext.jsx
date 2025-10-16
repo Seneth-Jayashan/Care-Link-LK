@@ -1,10 +1,8 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext } from "react";
 import api from "../api/api";
 
-// Create Auth Context
 const AuthContext = createContext();
 
-// Provider
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("authUser");
@@ -12,20 +10,6 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  // 🧩 Attach token to all API requests
-  useEffect(() => {
-    const interceptor = api.interceptors.request.use((config) => {
-      if (user?.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
-      }
-      return config;
-    });
-    return () => {
-      api.interceptors.request.eject(interceptor);
-    };
-  }, [user]);
-
-  // 🔐 Login
   const login = async (email, password) => {
     setLoading(true);
     try {
@@ -45,7 +29,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🚪 Logout
   const logout = async () => {
     setLoading(true);
     try {
@@ -62,13 +45,10 @@ export const AuthProvider = ({ children }) => {
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider
-      value={{ user, setUser, login, logout, loading, isAuthenticated }}
-    >
+    <AuthContext.Provider value={{ user, setUser, login, logout, loading, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook
 export const useAuth = () => useContext(AuthContext);
