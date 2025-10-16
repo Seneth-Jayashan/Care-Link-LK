@@ -36,7 +36,19 @@ const PrivateRoute = ({ children, roles }) => {
   return children;
 };
 
+
+import AdminDashboard from './routes/Admindashboardrouttes';
+
+
 function App() {
+  const AdminRoute = ({ children }) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const role = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
+    if (!token || role !== 'admin') {
+      return <Navigate to="/login" replace />
+    }
+    return children;
+  }
   return (
     <Routes>
       {/* 🏠 Public (MainLayout) Routes */}
@@ -137,7 +149,7 @@ function App() {
         element={
           <PrivateRoute roles={["admin"]}>
             <DashboardLayout>
-              <AdminPanel />
+              <AdminDashboard />
             </DashboardLayout>
           </PrivateRoute>
         }
