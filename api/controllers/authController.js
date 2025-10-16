@@ -18,8 +18,6 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log(email);
-
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials 1' });
@@ -41,6 +39,7 @@ export const loginUser = async (req, res) => {
         patientHistory: user.patientHistory || null,
         doctorDetails: user.doctorDetails || null,
         hospital: user.hospital || null,
+        token,
       },
     });
   } catch (err) {

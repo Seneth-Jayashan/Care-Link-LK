@@ -10,9 +10,17 @@ import DashboardLayout from "./components/layouts/DashboardLayout";
 import Home from "./pages/Home";
 import About from "./pages/AboutUs";
 import Login from "./pages/Login";
+
 import PatientDashboard from "./pages/patient/Dashboard";
+import PatientProfile from "./pages/patient/Profile.jsx";
+
 import DoctorDashboard from "./pages/doctor/Dashboard";
+
 import HospitalDashboard from "./pages/hospitaladmin/Dashboard";
+import HospitalDoctors from "./pages/hospitaladmin/Doctors.jsx";
+import HospitalPatients from "./pages/hospitaladmin/Patients.jsx";
+
+
 import AdminPanel from "./pages/admin/Dashboard";
 
 // Private Route Wrapper
@@ -82,6 +90,17 @@ function App() {
       />
 
       <Route
+        path="/patient/profile"
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+              <PatientProfile />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
         path="/doctor/*"
         element={
           <PrivateRoute roles={["doctor"]}>
@@ -103,6 +122,28 @@ function App() {
         }
       />
 
+      <Route
+        path="/hospital/patients"
+        element={
+          <PrivateRoute roles={["hospitaladmin"]}>
+            <DashboardLayout>
+              <HospitalPatients />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/hospital/doctors"
+        element={
+          <PrivateRoute roles={["hospitaladmin"]}>
+            <DashboardLayout>
+              <HospitalDoctors />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+      
       <Route
         path="/admin/*"
         element={

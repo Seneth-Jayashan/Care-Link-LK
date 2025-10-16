@@ -1,35 +1,31 @@
-import React, { createContext, useState, useContext } from "react";
-import axios from "axios";
+import React, { createContext, useState, useContext, useEffect } from "react";
+import api from "../api/api";
 
-// Create AuthContext
+// Create Auth Context
 const AuthContext = createContext();
 
-// Provider component
+// Provider
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("authUser");
-    return savedUser ? JSON.parse(savedUser) : null;
+    const saved = localStorage.getItem("authUser");
+    return saved ? JSON.parse(saved) : null;
   });
   const [loading, setLoading] = useState(false);
 
-  // Axios instance
-  const api = axios.create({
-    baseURL: "http://localhost:3001/api/v1",
-    withCredentials: true,
-  });
-
-  // Attach token from user to every request if available
-  api.interceptors.request.use(
-    (config) => {
+  // 🧩 Attach token to all API requests
+  useEffect(() => {
+    const interceptor = api.interceptors.request.use((config) => {
       if (user?.token) {
         config.headers.Authorization = `Bearer ${user.token}`;
       }
       return config;
-    },
-    (error) => Promise.reject(error)
-  );
+    });
+    return () => {
+      api.interceptors.request.eject(interceptor);
+    };
+  }, [user]);
 
-  // Login
+  // 🔐 Login
   const login = async (email, password) => {
     setLoading(true);
     try {
@@ -40,13 +36,16 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData };
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
-      return { success: false, message: err.response?.data?.message || "Login failed" };
+      return {
+        success: false,
+        message: err.response?.data?.message || "Invalid credentials",
+      };
     } finally {
       setLoading(false);
     }
   };
 
-  // Logout
+  // 🚪 Logout
   const logout = async () => {
     setLoading(true);
     try {
@@ -63,11 +62,13 @@ export const AuthProvider = ({ children }) => {
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading, isAuthenticated, api }}>
+    <AuthContext.Provider
+      value={{ user, setUser, login, logout, loading, isAuthenticated }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook to use AuthContext
+// Hook
 export const useAuth = () => useContext(AuthContext);
