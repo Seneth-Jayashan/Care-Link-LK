@@ -108,7 +108,7 @@ function App() {
         element={
           <PrivateRoute roles={["admin"]}>
             <DashboardLayout>
-              <AdminPanel />
+              <AdminDashboard />
             </DashboardLayout>
           </PrivateRoute>
         }
