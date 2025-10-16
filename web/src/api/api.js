@@ -1,18 +1,24 @@
-// src/api/api.js
 import axios from "axios";
 
+// Create base axios instance
 const api = axios.create({
-  baseURL: "http://localhost:3001/api/v1", // ✅ Your backend base URL
-  withCredentials: true, // ✅ Allows JWT cookies / refresh
+  baseURL: "http://localhost:3001/api/v1",
+  withCredentials: true, // for cookies / JWT if needed
 });
 
-// Optional: request/response logging for debugging
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
+// Attach token to all requests automatically
+api.interceptors.request.use(
+  (config) => {
+    const savedUser = localStorage.getItem("authUser");
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 export default api;
