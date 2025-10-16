@@ -19,6 +19,6 @@ router.get('/:id', protect, authorize('admin', 'hospitaladmin', 'doctor'), getHo
 
 // Admin can update or delete hospital
 router.put('/:id', protect, authorize('admin', 'hospitaladmin'), updateHospital);
-router.delete('/:id', protect, authorize('admin'), deleteHospital);
+router.delete('/:id', protect, authorize('admin','hospitaladmin'), deleteHospital);
 
 export default router;
