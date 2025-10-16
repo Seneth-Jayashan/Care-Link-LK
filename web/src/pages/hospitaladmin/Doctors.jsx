@@ -12,6 +12,10 @@ import {
   FileText,
   X,
   Image as ImageIcon,
+  Mail,
+  Lock,
+  Phone,
+  User,
 } from "lucide-react";
 import api from "../../api/api";
 
@@ -57,10 +61,7 @@ const CustomInput = ({
   error,
 }) => (
   <div>
-    <label
-      htmlFor={id}
-      className="block text-sm font-medium text-gray-700 mb-2"
-    >
+    <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
       {label}
     </label>
     <div className="relative">
@@ -84,9 +85,13 @@ const CustomInput = ({
   </div>
 );
 
-// --- Main AddDoctorPage ---
 const AddDoctorPage = () => {
   const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    role: "doctor",
     specialty: "",
     qualifications: "",
     yearsOfExperience: "",
@@ -103,7 +108,6 @@ const AddDoctorPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // Handle text & file changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
@@ -111,13 +115,9 @@ const AddDoctorPage = () => {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
-
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Handle schedule field changes
   const handleScheduleChange = (index, field, value) => {
     const newSchedule = [...formData.schedule];
     newSchedule[index][field] = value;
@@ -126,10 +126,12 @@ const AddDoctorPage = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    if (!formData.name) newErrors.name = "Name is required.";
+    if (!formData.email) newErrors.email = "Email is required.";
+    if (!formData.password) newErrors.password = "Password is required.";
+    if (!formData.phone) newErrors.phone = "Phone number is required.";
     if (!formData.specialty) newErrors.specialty = "Specialty is required.";
-    if (!formData.qualifications)
-      newErrors.qualifications = "Qualifications are required.";
-    if (!formData.hospital) newErrors.hospital = "Hospital is required.";
+    if (!formData.hospital) newErrors.hospital = "Hospital ID is required.";
     if (!formData.consultationFee)
       newErrors.consultationFee = "Consultation fee is required.";
     if (!formData.languages)
@@ -144,16 +146,18 @@ const AddDoctorPage = () => {
     setMessage({ type: "", text: "" });
 
     if (!validateForm()) {
-      setMessage({
-        type: "error",
-        text: "Please correct the highlighted fields.",
-      });
+      setMessage({ type: "error", text: "Please correct the highlighted fields." });
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setMessage({ type: "error", text: "You must be logged in as admin to add a doctor." });
       return;
     }
 
     setIsLoading(true);
     try {
-      // Convert comma-separated fields to arrays
       const formattedData = {
         ...formData,
         qualifications: formData.qualifications
@@ -164,28 +168,39 @@ const AddDoctorPage = () => {
           .split(",")
           .map((l) => l.trim())
           .filter(Boolean),
+        role: "doctor",
       };
 
-      // Prepare FormData for file upload
       const data = new FormData();
+      if (formData.profilePicture) {
+        data.append("profileImage", formData.profilePicture); // matches backend
+      }
+
       Object.keys(formattedData).forEach((key) => {
-        if (key === "schedule") {
-          data.append(key, JSON.stringify(formattedData[key]));
-        } else {
-          data.append(key, formattedData[key]);
+        if (key !== "profilePicture") {
+          if (key === "schedule") {
+            data.append(key, JSON.stringify(formattedData[key]));
+          } else {
+            data.append(key, formattedData[key]);
+          }
         }
       });
 
-      const res = await api.post("/users", data, {
-        headers: { "Content-Type": "multipart/form-data" },
+      await api.post("/users", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      setMessage({
-        type: "success",
-        text: "Doctor has been successfully added to CARE-LINK.",
-      });
+      setMessage({ type: "success", text: "Doctor successfully added to CARE-LINK." });
 
       setFormData({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+        role: "doctor",
         specialty: "",
         qualifications: "",
         yearsOfExperience: "",
@@ -199,10 +214,17 @@ const AddDoctorPage = () => {
       });
     } catch (err) {
       console.error(err);
-      setMessage({
-        type: "error",
-        text: "Failed to add doctor. Please check server logs.",
-      });
+      if (err.response?.status === 401) {
+        setMessage({
+          type: "error",
+          text: "Unauthorized. Make sure you are logged in as admin.",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: "Failed to add doctor. Check server logs.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -229,12 +251,57 @@ const AddDoctorPage = () => {
       </AnimatePresence>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Info */}
+        <fieldset className="p-6 border border-care-accent rounded-xl bg-white/70">
+          <legend className="px-3 text-lg font-semibold text-care-dark flex items-center gap-2">
+            <UserPlus size={20} /> Basic Information
+          </legend>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <CustomInput
+              id="name"
+              label="Full Name"
+              icon={User}
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Dr. John Doe"
+              error={errors.name}
+            />
+            <CustomInput
+              id="email"
+              label="Email"
+              icon={Mail}
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="doctor@example.com"
+              error={errors.email}
+            />
+            <CustomInput
+              id="password"
+              label="Password"
+              type="password"
+              icon={Lock}
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter password"
+              error={errors.password}
+            />
+            <CustomInput
+              id="phone"
+              label="Phone"
+              icon={Phone}
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="+94 77 123 4567"
+              error={errors.phone}
+            />
+          </div>
+        </fieldset>
+
         {/* Professional Info */}
-        <fieldset className="p-6 border border-care-accent rounded-xl bg-white/70 backdrop-blur-sm">
+        <fieldset className="p-6 border border-care-accent rounded-xl bg-white/70">
           <legend className="px-3 text-lg font-semibold text-care-dark flex items-center gap-2">
             <Stethoscope size={20} /> Professional Details
           </legend>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
             <CustomInput
               id="specialty"
@@ -245,7 +312,6 @@ const AddDoctorPage = () => {
               placeholder="Cardiology"
               error={errors.specialty}
             />
-
             <CustomInput
               id="qualifications"
               label="Qualifications (comma-separated)"
@@ -255,7 +321,6 @@ const AddDoctorPage = () => {
               placeholder="MBBS, MD"
               error={errors.qualifications}
             />
-
             <CustomInput
               id="yearsOfExperience"
               label="Years of Experience"
@@ -265,7 +330,6 @@ const AddDoctorPage = () => {
               onChange={handleChange}
               placeholder="5"
             />
-
             <CustomInput
               id="hospital"
               label="Hospital ID"
@@ -275,7 +339,6 @@ const AddDoctorPage = () => {
               placeholder="Hospital ObjectId"
               error={errors.hospital}
             />
-
             <CustomInput
               id="consultationFee"
               label="Consultation Fee"
@@ -289,12 +352,11 @@ const AddDoctorPage = () => {
           </div>
         </fieldset>
 
-        {/* Schedule Section */}
-        <fieldset className="p-6 border border-care-accent rounded-xl bg-white/70 backdrop-blur-sm">
+        {/* Schedule */}
+        <fieldset className="p-6 border border-care-accent rounded-xl bg-white/70">
           <legend className="px-3 text-lg font-semibold text-care-dark flex items-center gap-2">
             <Calendar size={20} /> Weekly Schedule
           </legend>
-
           {formData.schedule.map((s, idx) => (
             <div key={idx} className="grid grid-cols-3 gap-4 mt-4">
               <select
@@ -321,28 +383,23 @@ const AddDoctorPage = () => {
                 type="time"
                 className="border p-3 rounded-xl"
                 value={s.startTime}
-                onChange={(e) =>
-                  handleScheduleChange(idx, "startTime", e.target.value)
-                }
+                onChange={(e) => handleScheduleChange(idx, "startTime", e.target.value)}
               />
               <input
                 type="time"
                 className="border p-3 rounded-xl"
                 value={s.endTime}
-                onChange={(e) =>
-                  handleScheduleChange(idx, "endTime", e.target.value)
-                }
+                onChange={(e) => handleScheduleChange(idx, "endTime", e.target.value)}
               />
             </div>
           ))}
         </fieldset>
 
         {/* Additional Info */}
-        <fieldset className="p-6 border border-care-accent rounded-xl bg-white/70 backdrop-blur-sm">
+        <fieldset className="p-6 border border-care-accent rounded-xl bg-white/70">
           <legend className="px-3 text-lg font-semibold text-care-dark flex items-center gap-2">
             <FileText size={20} /> Additional Information
           </legend>
-
           <CustomInput
             id="languages"
             label="Languages (comma-separated)"
@@ -352,7 +409,6 @@ const AddDoctorPage = () => {
             placeholder="English, Sinhala"
             error={errors.languages}
           />
-
           <textarea
             id="bio"
             name="bio"
@@ -362,8 +418,6 @@ const AddDoctorPage = () => {
             className="mt-3 w-full p-3 border rounded-xl focus:ring-2 focus:ring-care-primary"
             rows="4"
           ></textarea>
-
-          {/* Updated: File upload */}
           <CustomInput
             id="profilePicture"
             label="Profile Picture"
@@ -371,7 +425,6 @@ const AddDoctorPage = () => {
             icon={ImageIcon}
             onChange={handleChange}
           />
-
           <CustomInput
             id="notes"
             label="Admin Notes"
@@ -382,7 +435,7 @@ const AddDoctorPage = () => {
           />
         </fieldset>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <motion.button
           type="submit"
           disabled={isLoading}
