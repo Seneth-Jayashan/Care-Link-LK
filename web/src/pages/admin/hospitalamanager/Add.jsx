@@ -14,9 +14,12 @@ const Add = () => {
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
     role: 'hospitaladmin'
   });
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,22 +29,70 @@ const Add = () => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validateForm = () => {
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
     setError('');
 
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await api.post('/users', formData);
+      const submitData = new FormData();
+      submitData.append('name', formData.name);
+      submitData.append('email', formData.email);
+      submitData.append('password', formData.password);
+      submitData.append('phone', formData.phone);
+      submitData.append('role', formData.role);
+      
+      if (profileImage) {
+        submitData.append('profileImage', profileImage);
+      }
+
+      const response = await api.post('/users', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
       setMessage('Hospital admin created successfully!');
       setFormData({
         name: '',
         email: '',
         password: '',
+        confirmPassword: '',
         phone: '',
         role: 'hospitaladmin'
       });
+      setProfileImage(null);
+      setImagePreview(null);
       setTimeout(() => {
         navigate('/admin');
       }, 2000);
@@ -133,6 +184,23 @@ const Add = () => {
             </div>
 
             <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password *
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                minLength="6"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Confirm password"
+              />
+            </div>
+
+            <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number
               </label>
@@ -147,17 +215,45 @@ const Add = () => {
               />
             </div>
 
+            <div>
+              <label htmlFor="profileImage" className="block text-sm font-medium text-gray-700 mb-2">
+                Profile Image
+              </label>
+              <input
+                type="file"
+                id="profileImage"
+                name="profileImage"
+                accept="image/jpeg,image/jpg,image/png"
+                onChange={handleImageChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {imagePreview && (
+                <div className="mt-3">
+                  <img
+                    src={imagePreview}
+                    alt="Profile preview"
+                    className="w-24 h-24 object-cover rounded-full border-2 border-gray-300"
+                  />
+                </div>
+              )}
+            </div>
+
 
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
-                onClick={() => setFormData({
-                  name: '',
-                  email: '',
-                  password: '',
-                  phone: '',
-                  role: 'hospitaladmin'
-                })}
+                onClick={() => {
+                  setFormData({
+                    name: '',
+                    email: '',
+                    password: '',
+                    confirmPassword: '',
+                    phone: '',
+                    role: 'hospitaladmin'
+                  });
+                  setProfileImage(null);
+                  setImagePreview(null);
+                }}
                 className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 Clear
