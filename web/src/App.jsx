@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
@@ -9,6 +10,8 @@ import AddHospital from './pages/hospitaladmin/AddHospital'
 import Aboutus from './pages/Aboutus'
 
 =======
+=======
+>>>>>>> Stashed changes
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -24,12 +27,16 @@ import DoctorPage from './pages/doctor/Dashboard'
 
 // Protected Route
 import ProtectedRoute from './components/auth/ProtectedRoute';
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
       <Routes>
       
@@ -40,6 +47,8 @@ function App() {
         
       </Routes>
 =======
+=======
+>>>>>>> Stashed changes
 
       <main className="flex-1">
         <Routes>
@@ -87,6 +96,9 @@ function App() {
         </Routes>
       </main>
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       <Footer />
     </div>
