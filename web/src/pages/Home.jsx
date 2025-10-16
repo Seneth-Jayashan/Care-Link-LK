@@ -213,7 +213,7 @@ const Home = ({ onNavigateToLogin }) => {
                         className="absolute flex flex-col items-center z-20 transform -translate-x-1/2 -translate-y-1/2" 
                         style={{ top: '10%', left: '20%' }}>
                         <Zap size={32} className="text-care-primary mb-1" />
-                        <span className="text-xs font-bold text-care-dark text-center">AI Diagnostics</span>
+                        <span className="text-xs font-bold text-care-dark text-center">Hospital</span>
                     </motion.div>
 
                     <motion.div 
