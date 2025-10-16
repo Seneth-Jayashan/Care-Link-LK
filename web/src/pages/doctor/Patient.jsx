@@ -20,8 +20,8 @@ export default function Patient() {
     if (!searchInput) return setMessage("Enter patient email or scan QR code");
 
     try {
-      const res = await api.get(`/patients/${searchInput}`);
-      const data = res.data;
+      const res = await api.get(`/patientHistories/email/${searchInput}`);
+       const data = res.data.userHistory;
       setPatient(data.user || data);
       setHistory(data);
       setMessage("");
