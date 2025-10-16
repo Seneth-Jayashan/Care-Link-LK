@@ -114,7 +114,7 @@ function App() {
         element={
           <PrivateRoute roles={["hospitaladmin"]}>
             <DashboardLayout>
-              <HospitalDoctors />
+              <HospitalDoctors/>
             </DashboardLayout>
           </PrivateRoute>
         }
