@@ -1,24 +1,25 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import { useAuth } from "./contexts/AuthContext";
 
+// Layouts
+import MainLayout from "./components/layouts/MainLayout";
+import DashboardLayout from "./components/layouts/DashboardLayout";
+
+// Pages
 import Home from "./pages/Home";
+import About from "./pages/AboutUs";
 import Login from "./pages/Login";
-
-// Role-based pages
 import PatientDashboard from "./pages/patient/Dashboard";
 import DoctorDashboard from "./pages/doctor/Dashboard";
 import HospitalDashboard from "./pages/hospitaladmin/Dashboard";
 import AdminPanel from "./pages/admin/Dashboard";
 
-import { useAuth } from "./contexts/AuthContext";
-
-// PrivateRoute Component
+// Private Route Wrapper
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="text-center py-10">Loading...</div>;
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -41,54 +42,81 @@ function App() {
     return children;
   }
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <div className="flex-1">
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
+    <Routes>
+      {/* 🏠 Public (MainLayout) Routes */}
+      <Route
+        path="/"
+        element={
+          <MainLayout>
+            <Home />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <MainLayout>
+            <About />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <MainLayout>
+            <Login />
+          </MainLayout>
+        }
+      />
 
-          {/* Protected routes */}
-          <Route
-            path="/patient"
-            element={
-              <PrivateRoute roles={["patient"]}>
-                <PatientDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/doctor"
-            element={
-              <PrivateRoute roles={["doctor"]}>
-                <DoctorDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/hospital"
-            element={
-              <PrivateRoute roles={["hospitaladmin"]}>
-                <HospitalDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin/*"
-            element={
-              <PrivateRoute roles={["admin"]}>
-                <AdminDashboard />
-              </PrivateRoute>
-            }
-          />
+      {/* 🔐 Protected (DashboardLayout) Routes */}
+      <Route
+        path="/patient/*"
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+              <PatientDashboard />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
 
-          {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-      <Footer />
-    </div>
+      <Route
+        path="/doctor/*"
+        element={
+          <PrivateRoute roles={["doctor"]}>
+            <DashboardLayout>
+              <DoctorDashboard />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/hospital/*"
+        element={
+          <PrivateRoute roles={["hospitaladmin"]}>
+            <DashboardLayout>
+              <HospitalDashboard />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/admin/*"
+        element={
+          <PrivateRoute roles={["admin"]}>
+            <DashboardLayout>
+              <AdminPanel />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      {/* 🚫 Catch-All */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
