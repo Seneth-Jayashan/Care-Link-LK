@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -38,12 +38,30 @@ const LoginPage = () => {
     setErrors({});
 
     try {
-      await login(formData.email, formData.password);
-      navigate("/dashboard"); // redirect to dashboard after login
+      const res = await login(formData.email, formData.password);
+      if (res.success) {
+        // Role-based redirect
+        switch (res.user.role) {
+          case "patient":
+            navigate("/patient");
+            break;
+          case "doctor":
+            navigate("/doctor");
+            break;
+          case "hospitaladmin":
+            navigate("/hospital");
+            break;
+          case "admin":
+            navigate("/admin");
+            break;
+          default:
+            navigate("/");
+        }
+      } else {
+        setErrors({ submit: res.message });
+      }
     } catch (err) {
-      setErrors({
-        submit: err.response?.data?.message || "Invalid credentials. Please try again.",
-      });
+      setErrors({ submit: "An error occurred. Please try again." });
     } finally {
       setIsLoading(false);
     }

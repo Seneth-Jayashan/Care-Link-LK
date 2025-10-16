@@ -14,8 +14,14 @@ const PORT = process.env.PORT || 5000;
 // Connect DB
 connectDB();
 
-// Middleware
-app.use(cors());
+// Middleware: CORS
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // your React frontend
+    credentials: true, // allow cookies / Authorization headers
+  })
+);
+
 app.use(express.json());
 app.use(logger);
 

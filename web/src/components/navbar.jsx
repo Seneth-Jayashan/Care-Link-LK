@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, Stethoscope } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -17,17 +18,19 @@ const Navbar = () => {
     { name: "Contact Us", to: "/contact" }
   ];
 
-  // Role-based links
-  const roleLinks = {
-    patient: [{ name: "Patient Dashboard", to: "/patient" }],
-    doctor: [{ name: "Doctor Dashboard", to: "/doctor" }],
-    hospitaladmin: [{ name: "Hospital Dashboard", to: "/hospital" }],
-    admin: [{ name: "Admin Panel", to: "/admin" }]
+  // Map roles to dashboard routes
+  const roleDashboard = {
+    patient: "/patient",
+    doctor: "/doctor",
+    hospitaladmin: "/hospital",
+    admin: "/admin"
   };
 
-  const userLinks = user ? roleLinks[user.role] || [] : [];
-
-  const allLinks = navItems.concat(userLinks);
+  const handleDashboardNavigate = () => {
+    if (user) {
+      navigate(roleDashboard[user.role]);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
@@ -45,7 +48,7 @@ const Navbar = () => {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
-            {allLinks.map((item, index) => (
+            {navItems.map((item, index) => (
               <motion.div
                 key={item.to}
                 initial={{ opacity: 0, y: -10 }}
@@ -69,7 +72,8 @@ const Navbar = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center space-x-4"
+                className="flex items-center space-x-4 cursor-pointer"
+                onClick={handleDashboardNavigate}
               >
                 <div className="flex items-center space-x-2 text-gray-700">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -77,14 +81,6 @@ const Navbar = () => {
                   </div>
                   <span className="font-medium">{user.name}</span>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={logout}
-                  className="px-4 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                >
-                  Logout
-                </motion.button>
               </motion.div>
             ) : (
               <Link to="/login">
@@ -121,7 +117,7 @@ const Navbar = () => {
               className="md:hidden border-t border-gray-200"
             >
               <div className="py-4 space-y-4">
-                {allLinks.map((item) => (
+                {navItems.map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}
@@ -138,12 +134,12 @@ const Navbar = () => {
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
-                        logout();
+                        handleDashboardNavigate();
                         setIsMenuOpen(false);
                       }}
                       className="w-full px-4 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
                     >
-                      Logout
+                      Go to Dashboard
                     </motion.button>
                   ) : (
                     <Link to="/login">

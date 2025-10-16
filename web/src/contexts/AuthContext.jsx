@@ -18,6 +18,17 @@ export const AuthProvider = ({ children }) => {
     withCredentials: true,
   });
 
+  // Attach token from user to every request if available
+  api.interceptors.request.use(
+    (config) => {
+      if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
   // Login
   const login = async (email, password) => {
     setLoading(true);
