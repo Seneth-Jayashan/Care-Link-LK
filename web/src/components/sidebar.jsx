@@ -27,7 +27,7 @@ const Sidebar = () => {
     ],
     doctor: [
       { name: "Dashboard", to: "/doctor", icon: LayoutDashboard },
-      { name: "Patients", to: "/doctor/patients", icon: HeartPulse },
+      { name: "Patient", to: "/doctor/patient", icon: HeartPulse },
       { name: "Appointments", to: "/doctor/appointments", icon: Stethoscope },
       { name: "Profile", to: "/doctor/profile", icon: User },
     ],

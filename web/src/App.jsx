@@ -15,6 +15,7 @@ import PatientDashboard from "./pages/patient/Dashboard";
 import PatientProfile from "./pages/patient/Profile.jsx";
 
 import DoctorDashboard from "./pages/doctor/Dashboard";
+import DoctorPatient from "./pages/doctor/Patient.jsx";
 
 import HospitalDashboard from "./pages/hospitaladmin/Dashboard";
 import HospitalDoctors from "./pages/hospitaladmin/Doctors.jsx";
@@ -94,6 +95,17 @@ function App() {
           <PrivateRoute roles={["doctor"]}>
             <DashboardLayout>
               <DoctorDashboard />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/doctor/patient"
+        element={
+          <PrivateRoute roles={["doctor"]}>
+            <DashboardLayout>
+              <DoctorPatient />
             </DashboardLayout>
           </PrivateRoute>
         }

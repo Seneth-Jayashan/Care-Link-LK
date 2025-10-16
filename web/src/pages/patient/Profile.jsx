@@ -50,9 +50,7 @@ export default function Profile() {
 
             // fetch patient history if exists
             if (data.patientHistory) {
-            console.log("Fetching patient history for:", data.patientHistory);
-            const h = await axios.get(`/patientHistories/${data.patientHistory}`);
-            console.log("Patient history fetched:", h.data);
+            const h = await axios.get(`/patientHistories/${data?.patientHistory._id}`);
             setHistory(h.data);
             }
         } catch (err) {
@@ -84,7 +82,7 @@ export default function Profile() {
   const handleHistoryUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/patienthistory/${history._id || user.patientHistory}`, history);
+      await axios.put(`/patientHistories/${history._id || user.patientHistory}`, history);
       setMessage("✅ Patient history updated");
       setIsEditing(false);
     } catch (err) {
@@ -281,90 +279,159 @@ export default function Profile() {
             </div>
           ) : (
             <form onSubmit={handleHistoryUpdate} className="space-y-4">
-              <div>
+            <div>
+                <label className="block font-medium text-gray-700">Date of Birth</label>
+                <input
+                type="date"
+                value={history.dateOfBirth?.split("T")[0] || ""}
+                onChange={(e) =>
+                    setHistory({ ...history, dateOfBirth: e.target.value })
+                }
+                className="w-full p-2 border rounded"
+                />
+            </div>
+
+            <div>
+                <label className="block font-medium text-gray-700">Gender</label>
+                <select
+                value={history.gender || ""}
+                onChange={(e) =>
+                    setHistory({ ...history, gender: e.target.value })
+                }
+                className="w-full p-2 border rounded"
+                >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label className="block font-medium text-gray-700">Blood Group</label>
+                <input
+                type="text"
+                value={history.bloodGroup || ""}
+                onChange={(e) =>
+                    setHistory({ ...history, bloodGroup: e.target.value })
+                }
+                className="w-full p-2 border rounded"
+                />
+            </div>
+
+            <div>
                 <label className="block font-medium text-gray-700">
-                  Chronic Diseases (comma separated)
+                Chronic Diseases (comma separated)
                 </label>
                 <input
-                  type="text"
-                  value={history.chronicDiseases.join(", ")}
-                  onChange={(e) =>
+                type="text"
+                value={history.chronicDiseases.join(", ")}
+                onChange={(e) =>
                     setHistory({
-                      ...history,
-                      chronicDiseases: e.target.value
-                        .split(",")
-                        .map((x) => x.trim()),
+                    ...history,
+                    chronicDiseases: e.target.value.split(",").map((x) => x.trim()),
                     })
-                  }
-                  className="w-full p-2 border rounded"
+                }
+                className="w-full p-2 border rounded"
                 />
-              </div>
+            </div>
 
-              <div>
+            <div>
                 <label className="block font-medium text-gray-700">
-                  Allergies (comma separated)
+                Allergies (comma separated)
                 </label>
                 <input
-                  type="text"
-                  value={history.allergies.join(", ")}
-                  onChange={(e) =>
+                type="text"
+                value={history.allergies.join(", ")}
+                onChange={(e) =>
                     setHistory({
-                      ...history,
-                      allergies: e.target.value
-                        .split(",")
-                        .map((x) => x.trim()),
+                    ...history,
+                    allergies: e.target.value.split(",").map((x) => x.trim()),
                     })
-                  }
-                  className="w-full p-2 border rounded"
+                }
+                className="w-full p-2 border rounded"
                 />
-              </div>
+            </div>
 
-              <div>
+            <div>
                 <label className="block font-medium text-gray-700">
-                  Past Surgeries (comma separated)
+                Past Surgeries (comma separated)
                 </label>
                 <input
-                  type="text"
-                  value={history.pastSurgeries.join(", ")}
-                  onChange={(e) =>
+                type="text"
+                value={history.pastSurgeries.join(", ")}
+                onChange={(e) =>
                     setHistory({
-                      ...history,
-                      pastSurgeries: e.target.value
-                        .split(",")
-                        .map((x) => x.trim()),
+                    ...history,
+                    pastSurgeries: e.target.value.split(",").map((x) => x.trim()),
                     })
-                  }
-                  className="w-full p-2 border rounded"
+                }
+                className="w-full p-2 border rounded"
                 />
-              </div>
+            </div>
 
-              <div>
+            <div>
+                <label className="block font-medium text-gray-700">
+                Family History (comma separated)
+                </label>
+                <input
+                type="text"
+                value={history.familyHistory.join(", ")}
+                onChange={(e) =>
+                    setHistory({
+                    ...history,
+                    familyHistory: e.target.value.split(",").map((x) => x.trim()),
+                    })
+                }
+                className="w-full p-2 border rounded"
+                />
+            </div>
+
+            <div>
+                <label className="block font-medium text-gray-700">
+                Medications (comma separated)
+                </label>
+                <input
+                type="text"
+                value={history.medications.join(", ")}
+                onChange={(e) =>
+                    setHistory({
+                    ...history,
+                    medications: e.target.value.split(",").map((x) => x.trim()),
+                    })
+                }
+                className="w-full p-2 border rounded"
+                />
+            </div>
+
+            <div>
                 <label className="block font-medium text-gray-700">Notes</label>
                 <textarea
-                  value={history.notes}
-                  onChange={(e) =>
+                value={history.notes}
+                onChange={(e) =>
                     setHistory({ ...history, notes: e.target.value })
-                  }
-                  className="w-full p-2 border rounded"
+                }
+                className="w-full p-2 border rounded"
                 />
-              </div>
+            </div>
 
-              <div className="flex space-x-3">
+            <div className="flex space-x-3">
                 <button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                type="submit"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                 >
-                  Save Changes
+                Save Changes
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
                 >
-                  Cancel
+                Cancel
                 </button>
-              </div>
+            </div>
             </form>
+
           )}
         </div>
       )}
