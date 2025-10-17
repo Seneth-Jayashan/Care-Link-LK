@@ -105,7 +105,7 @@ const DoctorCard = ({ doctor, onView }) => {
           LKR {doctor.consultationFee?.toLocaleString() || 'N/A'}
         </p>
         <div className="mt-3 w-full px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg group-hover:bg-blue-700 transition-colors duration-200">
-          View Profile
+          Book Appointment
         </div>
       </div>
     </motion.div>

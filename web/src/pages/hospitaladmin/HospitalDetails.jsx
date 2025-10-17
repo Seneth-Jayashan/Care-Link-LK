@@ -18,9 +18,12 @@ import {
   HeartPulse,
   Sparkles,
 } from "lucide-react";
-import api from "../../api/api"; // centralized axios instance
+import { useNavigate } from "react-router-dom"; // 👈 Import useNavigate
+import Swal from "sweetalert2"; // 👈 Import SweetAlert2
+import api from "../../api/api";
 
 // ------------------- Reusable Components -------------------
+// (No changes to your reusable components: SectionHeader, ConfirmationDialog, InputField)
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
   <div className="flex items-center gap-4 mb-6">
@@ -36,7 +39,6 @@ const SectionHeader = ({ icon: Icon, title, subtitle }) => (
 
 const ConfirmationDialog = ({ isOpen, onClose, onConfirm, item }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4">
       <motion.div
@@ -63,7 +65,6 @@ const ConfirmationDialog = ({ isOpen, onClose, onConfirm, item }) => {
             <X size={20} />
           </button>
         </div>
-
         <div className="flex justify-end gap-3 pt-4">
           <motion.button
             onClick={onClose}
@@ -104,18 +105,16 @@ const InputField = ({ label, name, value, onChange, ...props }) => (
     </div>
 );
 
-
 // ------------------- Main Component -------------------
 
 export default function HospitalManagement() {
+  const navigate = useNavigate(); // 👈 Initialize useNavigate
   const [activeTab, setActiveTab] = useState("view");
   const [hospital, setHospital] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState({ text: "", type: "" }); // {text, type: 'success' | 'error'}
-
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const user = JSON.parse(localStorage.getItem('authUser')); // ✅ parse JSON
+  const user = JSON.parse(localStorage.getItem("authUser"));
   const initialFormData = {
     name: "",
     code: "",
@@ -141,19 +140,13 @@ export default function HospitalManagement() {
   // ------------------- 🧹 UTILS -------------------
   const resetFormData = () => setFormData(initialFormData);
   
-  const showMessage = (text, type = "success") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: "", type: "" }), 5000); // Auto-hide after 5 seconds
-  };
-
   // ------------------- 🏥 API -------------------
   useEffect(() => {
     let fetched = false;
 
     const fetchHospital = async () => {
-      if (fetched) return; // prevent duplicate call in StrictMode
+      if (fetched) return;
       fetched = true;
-
       try {
         setLoading(true);
         const myHospital = await api.get(`/users/${user.id}`);
@@ -170,7 +163,11 @@ export default function HospitalManagement() {
         setActiveTab("view");
       } catch (err) {
         console.error(err);
-        showMessage("Failed to load hospital data. Please try again.", "error");
+        Swal.fire({ // 👈 Use Swal for error feedback
+            icon: 'error',
+            title: 'Loading Failed',
+            text: 'Could not load hospital data. Please try again.'
+        });
         setActiveTab("add");
       } finally {
         setLoading(false);
@@ -178,7 +175,7 @@ export default function HospitalManagement() {
     };
 
     fetchHospital();
-  }, []);
+  }, [user.id]); // Added user.id to dependency array for correctness
 
 
   // ------------------- DELETE -------------------
@@ -191,13 +188,23 @@ export default function HospitalManagement() {
 
     try {
       await api.delete(`/hospitals/${hospital._id}`);
-      showMessage(`Hospital "${hospital.name}" deleted successfully!`);
+      await Swal.fire({ // 👈 Use Swal for success feedback
+        icon: 'success',
+        title: 'Deleted!',
+        text: `Hospital "${hospital.name}" was deleted successfully.`,
+        timer: 2000,
+        showConfirmButton: false
+      });
       setHospital(null);
       setActiveTab("add");
       resetFormData();
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Something went wrong";
-      showMessage(`Error deleting hospital: ${errorMsg}`, "error");
+      Swal.fire({ // 👈 Use Swal for error feedback
+        icon: 'error',
+        title: 'Deletion Failed',
+        text: errorMsg,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -207,7 +214,7 @@ export default function HospitalManagement() {
   const startEdit = () => {
     if (!hospital) return;
     setFormData({
-      ...initialFormData, // Start with defaults to avoid undefined issues
+      ...initialFormData,
       ...hospital,
       address: hospital.address || initialFormData.address,
       contact: hospital.contact || initialFormData.contact,
@@ -219,6 +226,7 @@ export default function HospitalManagement() {
   };
 
   // ------------------- FORM HANDLERS -------------------
+  // (No changes to form handlers: handleChange, department, and facility handlers)
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes(".")) {
@@ -269,24 +277,42 @@ export default function HospitalManagement() {
     try {
       if (isEditing) {
         const res = await api.put(`/hospitals/${hospital._id}`, formData);
-        setHospital(res.data); // Update local state with response
-        showMessage("Hospital updated successfully!");
+        setHospital(res.data);
+        Swal.fire({ // 👈 Use Swal for update success
+          icon: 'success',
+          title: 'Updated!',
+          text: 'Hospital details updated successfully.',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        setIsEditing(false);
+        setActiveTab("view");
       } else {
         const res = await api.post("/hospitals", formData);
         setHospital(res.data);
-        showMessage("Hospital created successfully!");
+        await Swal.fire({ // 👈 Use Swal for creation success
+          icon: 'success',
+          title: 'Created!',
+          text: 'Hospital created successfully!',
+          timer: 1500, // Shorter timer before redirect
+          showConfirmButton: false,
+        });
+        navigate("/hospital"); // 👈 REDIRECT on success
       }
-      setIsEditing(false);
-      setActiveTab("view");
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Something went wrong";
-      showMessage(`Error: ${errorMsg}`, "error");
+      Swal.fire({ // 👈 Use Swal for submission errors
+        icon: 'error',
+        title: 'Submission Error',
+        text: errorMsg,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // ------------------- UI RENDER -------------------
+  // (No changes to render functions: renderViewContent, renderFormComponent)
   const renderViewContent = () => (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
         <SectionHeader icon={Building} title={hospital.name} subtitle={`Code: ${hospital.code}`} />
@@ -440,25 +466,11 @@ export default function HospitalManagement() {
                 onClick={() => resetFormData()}
               />
             )}
-
           </div>
         </div>
 
-        {/* --- 📣 Message Bar --- */}
-        <AnimatePresence>
-            {message.text && (
-            <motion.div
-                initial={{ opacity: 0, y: -20, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                exit={{ opacity: 0, y: -20, height: 0 }}
-                className={`px-6 py-3 text-sm font-medium text-white ${
-                message.type === 'error' ? 'bg-red-500' : 'bg-green-500'
-                }`}
-            >
-                {message.text}
-            </motion.div>
-            )}
-        </AnimatePresence>
+        {/* --- Message Bar Removed --- */}
+        {/* The old message bar is no longer needed as Swal handles notifications */}
 
         <div className="p-6 md:p-8">
           {loading ? (
@@ -484,7 +496,7 @@ export default function HospitalManagement() {
   );
 }
 
-// Tab Button Component for cleaner code
+// (No changes to TabButton component)
 const TabButton = ({ id, label, icon: Icon, activeTab, setActiveTab, disabled, onClick }) => (
     <button
         onClick={() => {
