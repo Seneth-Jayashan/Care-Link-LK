@@ -29,6 +29,7 @@ import HospitalDashboard from "./pages/hospitaladmin/Dashboard";
 import HospitalDoctors from "./pages/hospitaladmin/Doctors.jsx";
 import HospitalPatients from "./pages/hospitaladmin/Patients.jsx";
 import HospitalDetails from "./pages/hospitaladmin/HospitalDetails.jsx";
+import HospitalReports from "./pages/hospitaladmin/Reports.jsx";
 
 
 import AdminPanel from "./pages/admin/Dashboard";
@@ -273,6 +274,17 @@ function App() {
           <PrivateRoute roles={["hospitaladmin"]}>
             <DashboardLayout>
               <HospitalDetails />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/hospital/reports"
+        element={
+          <PrivateRoute roles={["hospitaladmin"]}>
+            <DashboardLayout>
+              <HospitalReports />
             </DashboardLayout>
           </PrivateRoute>
         }

@@ -164,7 +164,7 @@ const DoctorCard = ({ doctor, onView }) => {
           whileTap={{ scale: 0.98 }}
           className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
         >
-          View Profile
+          Book Appointment
         </motion.button>
       </div>
 
