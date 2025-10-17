@@ -23,6 +23,7 @@ import MyAppointments from "./pages/patient/MyAppointments.jsx";
 
 import DoctorDashboard from "./pages/doctor/Dashboard";
 import DoctorPatient from "./pages/doctor/Patient.jsx";
+import DoctorAppointment from "./pages/doctor/Appointments.jsx";
 
 import HospitalDashboard from "./pages/hospitaladmin/Dashboard";
 import HospitalDoctors from "./pages/hospitaladmin/Doctors.jsx";
@@ -195,6 +196,17 @@ function App() {
           <PrivateRoute roles={["doctor"]}>
             <DashboardLayout>
               <DoctorPatient />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/doctor/appointments"
+        element={
+          <PrivateRoute roles={["doctor"]}>
+            <DashboardLayout>
+              <DoctorAppointment />
             </DashboardLayout>
           </PrivateRoute>
         }
