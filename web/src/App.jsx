@@ -23,6 +23,7 @@ import HospitalPatients from "./pages/hospitaladmin/Patients.jsx";
 import HospitalDetails from "./pages/hospitaladmin/HospitalDetails.jsx";
 
 import AdminPanel from "./pages/admin/Dashboard";
+import ViewAllHospitalAdmins from "./pages/admin/hospitalamanager/ViewAllHospitalAdmins.jsx";
 
 // Private Route Wrapper
 const PrivateRoute = ({ children, roles }) => {
@@ -162,6 +163,17 @@ function App() {
           <PrivateRoute roles={["admin"]}>
             <DashboardLayout>
               <AdminDashboard />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/admin/hospital-managers"
+        element={
+          <PrivateRoute roles={["admin"]}>
+            <DashboardLayout>
+              <ViewAllHospitalAdmins />
             </DashboardLayout>
           </PrivateRoute>
         }
