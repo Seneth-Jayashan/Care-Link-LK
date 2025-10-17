@@ -1,86 +1,117 @@
+import asyncHandler from 'express-async-handler';
 import Payment from '../models/Payment.js';
 import Appointment from '../models/Appointment.js';
-import User from '../models/User.js';
-import Hospital from '../models/Hospital.js';
 
-// Create a payment
-export const createPayment = async (req, res) => {
-  try {
-    const { patient, appointment, hospital, doctor, amount, currency, paymentType, status, transactionId, provider, notes } = req.body;
+// @desc    Create a payment
+// @route   POST /api/payments
+// @access  Private
+export const createPayment = asyncHandler(async (req, res) => {
+    const { patient, appointment, hospital, doctor, amount, paymentType, status, transactionId } = req.body;
 
-    // Optional: validate patient and appointment exist
+    // CHANGED: More robust validation
+    if (!patient || !appointment || !amount) {
+        res.status(400);
+        throw new Error('Patient, appointment, and amount are required.');
+    }
+
     const appointmentExists = await Appointment.findById(appointment);
-    if (!appointmentExists) return res.status(404).json({ message: 'Appointment not found' });
+    if (!appointmentExists) {
+        res.status(404);
+        throw new Error('Associated appointment not found');
+    }
 
     const payment = new Payment({
-      patient,
-      appointment,
-      hospital,
-      doctor,
-      amount,
-      currency,
-      paymentType,
-      status,
-      transactionId,
-      provider,
-      notes,
+        patient,
+        appointment,
+        hospital,
+        doctor,
+        amount,
+        paymentType,
+        status,
+        transactionId,
     });
 
-    await payment.save();
-    res.status(201).json(payment);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+    const createdPayment = await payment.save();
+    res.status(201).json(createdPayment);
+});
 
-// Get all payments
-export const getPayments = async (req, res) => {
-  try {
-    const payments = await Payment.find()
-      .populate('patient', 'name email')
-      .populate('doctor', 'name email')
-      .populate('hospital', 'name code')
-      .populate('appointment');
+// @desc    Get payments based on user role
+// @route   GET /api/payments
+// @access  Private
+export const getPayments = asyncHandler(async (req, res) => {
+    let query = {};
+
+    // CHANGED: Role-based data filtering for security
+    const { role, _id } = req.user;
+
+    if (role === 'patient') {
+        query.patient = _id;
+    } else if (role === 'doctor') {
+        query.doctor = _id;
+    } else if (role === 'hospitaladmin' && req.user.hospital) {
+        query.hospital = req.user.hospital;
+    }
+
+    const payments = await Payment.find(query)
+        .populate('patient', 'name email')
+        .populate('doctor', 'name email')
+        .populate('appointment', 'appointmentDate reason')
+        .sort({ createdAt: -1 });
+
     res.json(payments);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+});
 
-// Get single payment by ID
-export const getPaymentById = async (req, res) => {
-  try {
+// @desc    Get a single payment by ID
+// @route   GET /api/payments/:id
+// @access  Private
+export const getPaymentById = asyncHandler(async (req, res) => {
     const payment = await Payment.findById(req.params.id)
-      .populate('patient', 'name email')
-      .populate('doctor', 'name email')
-      .populate('hospital', 'name code')
-      .populate('appointment');
-    if (!payment) return res.status(404).json({ message: 'Payment not found' });
-    res.json(payment);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+        .populate('patient', 'name email')
+        .populate('doctor', 'name email')
+        .populate('appointment');
 
-// Update payment
-export const updatePayment = async (req, res) => {
-  try {
-    const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!payment) return res.status(404).json({ message: 'Payment not found' });
-    res.json(payment);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+    if (!payment) {
+        res.status(404);
+        throw new Error('Payment not found');
+    }
+    
+    // NEW: Security check
+    const { role, _id } = req.user;
+     if (role !== 'admin' &&
+        payment.patient._id.toString() !== _id.toString() &&
+        payment.doctor._id.toString() !== _id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to view this payment');
+    }
 
-// Delete payment
-export const deletePayment = async (req, res) => {
-  try {
-    const payment = await Payment.findByIdAndDelete(req.params.id);
-    if (!payment) return res.status(404).json({ message: 'Payment not found' });
-    res.json({ message: 'Payment deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+    res.json(payment);
+});
+
+// @desc    Update a payment
+// @route   PUT /api/payments/:id
+// @access  Private
+export const updatePayment = asyncHandler(async (req, res) => {
+    const payment = await Payment.findById(req.params.id);
+
+    if (!payment) {
+        res.status(404);
+        throw new Error('Payment not found');
+    }
+    
+    const updatedPayment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    res.json(updatedPayment);
+});
+
+// @desc    Delete a payment
+// @route   DELETE /api/payments/:id
+// @access  Private
+export const deletePayment = asyncHandler(async (req, res) => {
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) {
+        res.status(404);
+        throw new Error('Payment not found');
+    }
+
+    await payment.deleteOne();
+    res.json({ message: 'Payment removed successfully' });
+});

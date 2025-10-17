@@ -33,8 +33,8 @@ const paymentSchema = new mongoose.Schema(
 
     paymentType: {
       type: String,
-      enum: ['cash', 'card', 'insurance', 'online', 'other'],
-      default: 'cash',
+      enum: ['cash', 'card', 'insurance', 'online', 'coverage'],
+      default: 'card',
     },
 
     status: {

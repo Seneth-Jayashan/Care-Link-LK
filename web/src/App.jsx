@@ -13,8 +13,12 @@ import Login from "./pages/Login";
 
 import PatientDashboard from "./pages/patient/Dashboard";
 import PatientProfile from "./pages/patient/Profile.jsx";
-import DisplayDoctors from "./pages/patient/DisplayDoctors.jsx";
-import DoctorDetailPage from "./pages/patient/DoctorDetailPage.jsx";
+import DisplayDoctors from './pages/patient/DisplayDoctors';
+import BookingSummary from './pages/patient/BookingSummary';
+import BookingSuccess from './pages/patient/BookingSuccess';
+import PaymentPage from './pages/patient/PaymentPage';
+import InsuranceVerificationPage from './pages/patient/InsuranceVerificationPage';
+
 
 import DoctorDashboard from "./pages/doctor/Dashboard";
 import DoctorPatient from "./pages/doctor/Patient.jsx";
@@ -23,6 +27,7 @@ import HospitalDashboard from "./pages/hospitaladmin/Dashboard";
 import HospitalDoctors from "./pages/hospitaladmin/Doctors.jsx";
 import HospitalPatients from "./pages/hospitaladmin/Patients.jsx";
 import HospitalDetails from "./pages/hospitaladmin/HospitalDetails.jsx";
+
 
 import AdminPanel from "./pages/admin/Dashboard";
 import ViewAllHospitalAdmins from "./pages/admin/hospitalamanager/ViewAllHospitalAdmins.jsx";
@@ -115,16 +120,51 @@ function App() {
         }
       />
 
-       <Route
-        path="/doctor/:id" 
+      <Route
+        path="/patient/booking-summary"
         element={
           <PrivateRoute roles={["patient"]}>
             <DashboardLayout>
-             <DoctorDetailPage/>
+              <BookingSummary/>
             </DashboardLayout>
           </PrivateRoute>
         }
       />
+
+      <Route
+        path="/patient/booking-success"
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+              <BookingSuccess/>
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/patient/payment/:appointmentId"
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+              <PaymentPage/>
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/patient/insurance-verification/:appointmentId"
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+              <InsuranceVerificationPage/>
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+
 
       <Route
         path="/doctor/*"

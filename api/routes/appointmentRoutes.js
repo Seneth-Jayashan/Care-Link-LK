@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Only patients, doctors, hospitaladmin can create/update
 router.post('/', protect, authorize('patient', 'doctor', 'hospitaladmin'), createAppointment);
-router.put('/:id', protect, authorize('doctor', 'hospitaladmin'), updateAppointment);
+router.put('/:id', protect, authorize('doctor', 'hospitaladmin', 'patient'), updateAppointment);
 router.delete('/:id', protect, authorize('admin', 'hospitaladmin'), deleteAppointment);
 
 // Viewing allowed for all authenticated roles

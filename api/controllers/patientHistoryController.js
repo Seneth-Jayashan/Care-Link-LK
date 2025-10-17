@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import PatientHistory from '../models/PatientHistory.js';
-import User from '../models/User.js';
+import User from '../models/user.js';
 
 // Get all patient histories
 export const getAllPatientHistories = async (req, res) => {
