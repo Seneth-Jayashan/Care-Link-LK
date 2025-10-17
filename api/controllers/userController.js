@@ -4,75 +4,117 @@ import PatientHistory from '../models/PatientHistory.js';
 import DoctorDetails from '../models/DoctorDetails.js';
 import { generatePatientQR } from '../utils/qrGenerator.js';
 import { sendEmailWithQR } from '../utils/sendEmail.js';
-import fs from 'fs';
 import Hospital from '../models/Hospital.js';
+import fs from 'fs';
 
 // Create User
 export const createUser = async (req, res) => {
   try {
+    const {
+      name,
+      email,
+      password,
+      phone,
+      role,
+      dateOfBirth,
+      gender,
+      bloodGroup,
+      address,
+      emergencyContact,
+      chronicDiseases = [],
+      pastSurgeries = [],
+      familyHistory = [],
+      allergies = [],
+      medications = [],
+      notes,
+      specialty,
+      qualifications,
+      yearsOfExperience,
+      consultationFee,
+      schedule,
+      languages,
+      bio,
+    } = req.body;
 
-    const { name, email, password, phone, role } = req.body;
-
+    // Step 1: Create basic user
     const user = new User({ name, email, password, phone, role });
 
     if (req.file) user.profileImage = req.file.path;
 
     // ------------------- PATIENT -------------------
     if (role === 'patient') {
-      const history = new PatientHistory({ user: user._id });
+      // Ensure arrays are properly parsed if coming as JSON strings
+      const parseArray = (field) => {
+        if (!field) return [];
+        if (typeof field === 'string') {
+          try {
+            return JSON.parse(field);
+          } catch {
+            return field.split(',').map(s => s.trim()).filter(Boolean);
+          }
+        }
+        return field;
+      };
+
+      const history = new PatientHistory({
+        user: user._id,
+        dateOfBirth,
+        gender,
+        bloodGroup,
+        address,
+        emergencyContact,
+        chronicDiseases: parseArray(chronicDiseases),
+        pastSurgeries: parseArray(pastSurgeries),
+        familyHistory: parseArray(familyHistory),
+        allergies: parseArray(allergies),
+        currentMedications: parseArray(medications),
+        notes: notes || '',
+        createdAt: new Date(),
+      });
+
       await history.save();
       user.patientHistory = history._id;
       await user.save();
 
-      const patientData = {
+      // Generate QR and send email
+      const qrCodeDataUrl = await generatePatientQR({
         userId: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         patientHistoryId: history._id,
-      };
-      const qrCodeDataUrl = await generatePatientQR(patientData);
+      });
 
       await sendEmailWithQR(user.email, 'Your Patient Account QR', qrCodeDataUrl, password);
 
       return res.status(201).json({
-        message: 'Patient created and email sent successfully',
+        message: '✅ Patient created and email sent successfully!',
         user: {
           _id: user._id,
           name: user.name,
           email: user.email,
           phone: user.phone,
+          role: user.role,
+          patientHistory: history._id,
         },
       });
     }
 
+    // ------------------- DOCTOR -------------------
     if (role === 'doctor') {
-      const {
-        specialty,
-        qualifications,
-        yearsOfExperience,
-        consultationFee,
-        schedule,
-        languages,
-        bio,
-        notes
-      } = req.body;
-
-      const hospital = req.user.hospital; // securely get hospital from logged-in user
-      const profilePicture = req.file ? req.file.path : null;
-
+      const hospital = req.user?.hospital; // Optional hospital link
       const doctorDetails = new DoctorDetails({
         user: user._id,
         specialty,
         qualifications,
         yearsOfExperience,
         consultationFee,
-        schedule: JSON.parse(schedule), // schedule comes as JSON string
+        schedule: schedule ? JSON.parse(schedule) : [],
         languages,
         bio,
-        notes,
-        profileImage:profilePicture,
-        hospital
+        notes: notes || '',
+        profileImage: req.file ? req.file.path : null,
+        hospital,
       });
 
       await doctorDetails.save();
@@ -80,35 +122,32 @@ export const createUser = async (req, res) => {
       await user.save();
 
       return res.status(201).json({
-        message: 'Doctor created successfully',
+        message: '✅ Doctor created successfully',
         user: {
           _id: user._id,
           name: user.name,
           email: user.email,
           phone: user.phone,
           role: user.role,
-          doctorDetails: doctorDetails._id
+          doctorDetails: doctorDetails._id,
         },
       });
     }
-    // ------------------- HOSPITAL ADMIN / OTHERS -------------------
-    // This part will now only be reached for roles other than 'patient' and 'doctor'
-    await user.save(); // Save user if not already saved in a specific role block
-    res.status(201).json({
-      message: `${role} created successfully`,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-      },
+
+    // ------------------- OTHER ROLES -------------------
+    await user.save();
+    return res.status(201).json({
+      message: `✅ ${role} created successfully`,
+      user,
     });
+
   } catch (err) {
-    console.error(err);
+    console.error('❌ Error in createUser:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+
 
 // --------------------
 // GET ALL USERS
