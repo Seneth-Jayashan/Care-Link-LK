@@ -51,12 +51,10 @@ export const getPatientByQRCode = async (req, res) => {
   try {
     const { patientHistoryId } = req.body;
     if (!patientHistoryId){
-      console.log('error 1');
       return res.status(400).json({ message: "patientHistoryId is required" });
     }
 
     if (!mongoose.Types.ObjectId.isValid(patientHistoryId)) {
-            console.log('error 2' , patientHistoryId);
 
       return res.status(400).json({ message: "Invalid patientHistoryId" });
     }
