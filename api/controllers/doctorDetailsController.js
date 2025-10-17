@@ -3,7 +3,16 @@ import DoctorDetails from '../models/DoctorDetails.js';
 // Get all doctor details
 export const getAllDoctorDetails = async (req, res) => {
   try {
-    const doctors = await DoctorDetails.find().populate('user').populate('hospital');
+    const filter = {};
+    // If the requester is a hospital admin and has a hospital assigned,
+    // only return doctors belonging to that hospital
+    if (req.user?.role === 'hospitaladmin' && req.user?.hospital) {
+      filter.hospital = req.user.hospital;
+    }
+
+    const doctors = await DoctorDetails.find(filter)
+      .populate('user')
+      .populate('hospital');
     res.json(doctors);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
