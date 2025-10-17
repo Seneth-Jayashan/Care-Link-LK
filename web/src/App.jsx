@@ -18,6 +18,7 @@ import BookingSummary from './pages/patient/BookingSummary';
 import BookingSuccess from './pages/patient/BookingSuccess';
 import PaymentPage from './pages/patient/PaymentPage';
 import InsuranceVerificationPage from './pages/patient/InsuranceVerificationPage';
+import MyAppointments from "./pages/patient/MyAppointments.jsx";
 
 
 import DoctorDashboard from "./pages/doctor/Dashboard";
@@ -104,6 +105,17 @@ function App() {
           <PrivateRoute roles={["patient"]}>
             <DashboardLayout>
               <PatientProfile />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/patient/appointments"
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+              <MyAppointments />
             </DashboardLayout>
           </PrivateRoute>
         }

@@ -21,6 +21,17 @@ export const getDoctorDetailsById = async (req, res) => {
   }
 };
 
+// Get single doctor details by ID
+export const getDoctorDetailsByUserId = async (req, res) => {
+  try {
+    const doctor = await DoctorDetails.findOne({user:req.params.id}).populate('user').populate('hospital');
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+    res.json(doctor);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Update doctor details
 export const updateDoctorDetails = async (req, res) => {
   try {

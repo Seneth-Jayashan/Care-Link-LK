@@ -8,7 +8,6 @@ import DoctorDetails from '../models/DoctorDetails.js';
 // @access  Private
 export const createAppointment = asyncHandler(async (req, res) => {
     const { patient, doctor, hospital, appointmentDate, appointmentTime, reason } = req.body;
-    console.log(req.body);
     // CHANGED: More robust validation
     if (!patient || !doctor || !hospital || !appointmentDate || !appointmentTime || !reason) {
         res.status(400);
