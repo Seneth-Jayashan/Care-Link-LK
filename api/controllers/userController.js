@@ -2,6 +2,7 @@
 import User from '../models/user.js';
 import PatientHistory from '../models/PatientHistory.js';
 import DoctorDetails from '../models/DoctorDetails.js';
+import Appointment from '../models/Appointment.js';
 import { generatePatientQR } from '../utils/qrGenerator.js';
 import { sendEmailWithQR } from '../utils/sendEmail.js';
 import Hospital from '../models/Hospital.js';
@@ -247,3 +248,40 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+
+
+export const getLoggedUser = async (req, res) => {
+  try {
+    console.log('Logged-in user ID:', req.user._id);
+
+    const user = await User.findById(req.user._id)
+      .select('-password')
+      .populate('hospital');
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    let doctors = 0;
+    let patients = 0;
+
+    if (user.hospital) {
+      // Count doctors in this hospital
+      doctors = await DoctorDetails.countDocuments({ hospital: user.hospital._id });
+
+      // Count unique patients with appointments in this hospital with status pending or confirmed
+      const patientIds = await Appointment.distinct('patient', {
+        hospital: user.hospital._id,
+        status: { $in: ['pending', 'confirmed'] },
+      });
+      patients = patientIds.length;
+    }
+
+    res.json({ user, hospital: user.hospital, doctors, patients });
+  } catch (err) {
+    console.error('Error in /me:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+
+

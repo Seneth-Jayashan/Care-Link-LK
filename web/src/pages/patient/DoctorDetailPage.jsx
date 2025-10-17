@@ -53,7 +53,6 @@ const DoctorDetailPage = () => {
         </button>
 
         {/* Doctor Card */}
-        <div className=" flex- items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-8 flex flex-col md:flex-row items-center gap-8">
 
           {/* Left: Profile Image */}
@@ -104,7 +103,6 @@ const DoctorDetailPage = () => {
           </div>
         </div>
         </div>
-      </div>
     </motion.div>
   );
 };
