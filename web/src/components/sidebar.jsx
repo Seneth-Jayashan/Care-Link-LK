@@ -52,7 +52,7 @@ const Sidebar = () => {
         name: "Hospital Managers",
         icon: Building2,
         children: [
-          { name: "View All", to: "/admin" },
+          { name: "View All", to: "/admin/hospital-managers" },
           { name: "Add", to: "/admin/add-hospital-manager" },
         ],
       },
