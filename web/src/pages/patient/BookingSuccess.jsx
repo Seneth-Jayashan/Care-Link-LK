@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, Calendar, Clock, User, Home, List, Stethoscope, MapPin } from 'lucide-react';
+import api from '../../api/api';
 
 const BookingSuccess = () => {
   const location = useLocation();
@@ -17,6 +18,18 @@ const BookingSuccess = () => {
   }
 
   const { doctor, timeSlot, hospital } = appointmentDetails;
+
+  React.useEffect(() => {
+    const sendConfirmationEmail = async () => {
+      try {
+        await api.post('/appointments/confirm', { appointmentDetails });
+      } catch (error) {
+        console.error('Error sending confirmation email:', error);
+      }
+    };
+
+    sendConfirmationEmail();
+  }, [appointmentDetails]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 flex items-center justify-center transition-all duration-500">
@@ -146,7 +159,7 @@ const BookingSuccess = () => {
               Back to Home
             </Link>
             <Link 
-              to="/MyAppointments" 
+              to="/my-appointments" 
               className="flex items-center justify-center gap-3 px-8 py-4 border-2 border-blue-300 text-blue-700 bg-white font-bold rounded-xl hover:bg-blue-50 hover:scale-105 transition-all duration-300"
             >
               <List size={20} />
