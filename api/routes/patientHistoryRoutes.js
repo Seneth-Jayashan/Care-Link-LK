@@ -21,7 +21,7 @@ router.get('/', protect, authorize('admin', 'doctor', 'hospitaladmin'), getAllPa
 
 // View single patient history by ID (admin, doctor, hospitaladmin, patient)
 router.get('/:id', protect, authorize('admin', 'doctor', 'hospitaladmin', 'patient'), getPatientHistoryById);
-router.get('/:email', protect, authorize('admin', 'hospitaladmin', 'doctor'), getPatientByEmail )
+router.get('/email/:email', protect, authorize('admin', 'hospitaladmin', 'doctor'), getPatientByEmail )
 // QR Scan: doctor scans patient QR to fetch patient history
 router.post('/scan', protect, authorize('doctor'), getPatientByQRCode);
 

@@ -1,45 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  UserPlus,
-  Edit3,
-  Trash2,
-  Users,
-  Mail,
-  Phone,
+import { 
+  Users, 
+  Building2, 
+  Stethoscope, 
+  HeartPulse, 
+  TrendingUp,
+  Activity,
   Calendar,
-  Shield,
-  Loader2,
-  Search,
-  Filter,
-  AlertCircle
+  DollarSign
 } from 'lucide-react';
 import api from '../../api/api';
 
 export default function HospitalAdminManagement() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [hospitalAdmins, setHospitalAdmins] = useState([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalHospitalAdmins: 0,
+    totalDoctors: 0,
+    totalPatients: 0,
+    totalHospitals: 0,
+    totalAppointments: 0,
+    totalRevenue: 0,
+    activeUsers: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, admin: null });
 
   useEffect(() => {
-    fetchHospitalAdmins();
+    fetchDashboardStats();
   }, []);
 
-  const fetchHospitalAdmins = async () => {
+  const fetchDashboardStats = async () => {
     try {
-      const response = await api.get('/users');
-      // Filter only hospital admins
-      const admins = response.data.filter(user => user.role === 'hospitaladmin');
-      setHospitalAdmins(admins);
+      // Fetch all users to calculate stats
+      const usersResponse = await api.get('/users');
+      const users = usersResponse.data;
+      
+      // Calculate statistics
+      const totalUsers = users.length;
+      const totalHospitalAdmins = users.filter(u => u.role === 'hospitaladmin').length;
+      const totalDoctors = users.filter(u => u.role === 'doctor').length;
+      const totalPatients = users.filter(u => u.role === 'patient').length;
+      
+      // Mock data for other stats (replace with actual API calls when available)
+      const totalHospitals = totalHospitalAdmins; // Assuming 1 hospital per admin
+      
+
+      setStats({
+        totalUsers,
+        totalHospitalAdmins,
+        totalDoctors,
+        totalPatients,
+        totalHospitals
+      });
     } catch (err) {
-      console.error('Error fetching hospital admins:', err);
-      setError('Failed to load hospital admins');
+      console.error('Error fetching dashboard stats:', err);
+      setError('Failed to load dashboard statistics');
     } finally {
       setLoading(false);
     }
@@ -102,195 +123,127 @@ export default function HospitalAdminManagement() {
   // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
-          <Loader2 className="animate-spin text-blue-600 mx-auto mb-4" size={48} />
-          <h3 className="text-xl font-semibold text-gray-700">Loading Hospital Admins</h3>
-          <p className="text-gray-500 mt-2">Please wait while we fetch the data...</p>
-        </motion.div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden"
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-3 text-white">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <Users size={26} />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Hospital Admin Management</h1>
-                <p className="text-blue-100">Manage hospital administrators and their access</p>
-              </div>
-            </div>
+  const statCards = [
+    {
+      title: 'Total Users',
+      value: stats.totalUsers,
+      icon: Users,
+      color: 'bg-blue-500',
+      change: '+12%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Hospital Admins',
+      value: stats.totalHospitalAdmins,
+      icon: Building2,
+      color: 'bg-green-500',
+      change: '+5%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Doctors',
+      value: stats.totalDoctors,
+      icon: Stethoscope,
+      color: 'bg-purple-500',
+      change: '+8%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Patients',
+      value: stats.totalPatients,
+      icon: HeartPulse,
+      color: 'bg-red-500',
+      change: '+15%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Hospitals',
+      value: stats.totalHospitals,
+      icon: Building2,
+      color: 'bg-indigo-500',
+      change: '+3%',
+      changeType: 'positive'
+    }
+  ];
 
-            <motion.button
-              onClick={handleAdd}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-gray-100 transition flex items-center gap-2 shadow-lg"
-            >
-              <UserPlus size={20} />
-              Add Hospital Admin
-            </motion.button>
-          </div>
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">System Dashboard</h1>
+          <p className="text-gray-600 mt-2">Overview of the Care Link system</p>
         </div>
 
-        {/* Body */}
-        <div className="p-8">
-          {/* Error Message */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3"
-              >
-                <AlertCircle size={20} />
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
 
-          {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search admins by name, email, or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              />
-            </div>
-            <button className="px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition flex items-center gap-2 text-gray-700">
-              <Filter size={18} />
-              Filter
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {statCards.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={index} className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  </div>
+                  <div className={`p-3 rounded-full ${stat.color}`}>
+                    <Icon className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center">
+                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                  <span className="text-sm text-green-600 font-medium">{stat.change}</span>
+                  <span className="text-sm text-gray-500 ml-1">from last month</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => navigate('/admin/hospital-managers')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Building2 className="h-8 w-8 text-blue-500 mb-2" />
+              <h3 className="font-semibold text-gray-900">Manage Hospital Admins</h3>
+              <p className="text-sm text-gray-600">View and manage hospital administrators</p>
+            </button>
+            <button
+              onClick={() => navigate('/admin/users')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Users className="h-8 w-8 text-green-500 mb-2" />
+              <h3 className="font-semibold text-gray-900">Manage Users</h3>
+              <p className="text-sm text-gray-600">View and manage all system users</p>
+            </button>
+            <button
+              onClick={() => navigate('/admin/settings')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Activity className="h-8 w-8 text-purple-500 mb-2" />
+              <h3 className="font-semibold text-gray-900">System Settings</h3>
+              <p className="text-sm text-gray-600">Configure system-wide settings</p>
             </button>
           </div>
-
-          {/* Admins Table */}
-          {filteredAdmins.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
-            >
-              <Users className="mx-auto text-gray-400 mb-4" size={64} />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {searchTerm ? 'No matching admins found' : 'No Hospital Admins'}
-              </h3>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                {searchTerm 
-                  ? 'Try adjusting your search terms to find what you\'re looking for.'
-                  : 'Get started by adding your first hospital administrator to manage hospital operations.'
-                }
-              </p>
-              {!searchTerm && (
-                <motion.button
-                  onClick={handleAdd}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold flex items-center gap-2 mx-auto"
-                >
-                  <UserPlus size={18} />
-                  Add First Hospital Admin
-                </motion.button>
-              )}
-            </motion.div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-200 rounded-xl overflow-hidden">
-                <thead className="bg-blue-50 text-blue-700">
-                  <tr>
-                    <th className="py-4 px-6 text-left font-semibold">Admin</th>
-                    <th className="py-4 px-6 text-left font-semibold">Contact</th>
-                    <th className="py-4 px-6 text-left font-semibold">Created</th>
-                    <th className="py-4 px-6 text-center font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAdmins.map((admin, index) => (
-                    <motion.tr
-                      key={admin._id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="border-t hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-4 px-6">
-                        <div>
-                          <div className="font-semibold text-gray-900">{admin.name}</div>
-                          <div className="text-sm text-gray-500">{admin.email}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Phone size={16} />
-                          <span>{admin.phone || 'Not provided'}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar size={16} />
-                          <span>{new Date(admin.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex justify-center gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleEdit(admin._id)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="Edit Admin"
-                          >
-                            <Edit3 size={16} />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setDeleteConfirm({ show: true, admin })}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                            title="Delete Admin"
-                          >
-                            <Trash2 size={16} />
-                          </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Stats Summary */}
-          {filteredAdmins.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-6 p-4 bg-gray-50 rounded-xl"
-            >
-              <p className="text-sm text-gray-600 text-center">
-                Showing {filteredAdmins.length} of {hospitalAdmins.length} hospital administrators
-              </p>
-            </motion.div>
-          )}
         </div>
       </motion.div>
 

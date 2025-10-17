@@ -97,12 +97,23 @@ export const getPatientByEmail = async (req,res) => {
   try{
     const { email } =req.params;
     const user = await User.findOne({email});
+
     if(!user){
       return res.status(404).josn({ message: 'Patient not found'});
     }
-    const userHistory = await  getPatientHistoryById(user.patientHistory);
+    const userHistory = await  getHistory(user.patientHistory);
+
     res.status(200).json({ message: 'Patient History Get Successfully',userHistory })
   }catch(error){
     return res.status(500).json({ message: 'Server Error'})
   }
 }
+
+export const getHistory = async (historyId) => {
+  if (!mongoose.Types.ObjectId.isValid(historyId)) return null;
+
+  const history = await PatientHistory.findById(historyId)
+    .populate("user", "name email phone")
+    .populate("appointments");
+  return history;
+};
