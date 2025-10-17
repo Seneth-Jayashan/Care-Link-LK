@@ -204,7 +204,7 @@ const PatientManagement = () => {
         try {
             setLoading(true);
             const response = await api.get('/users');
-            const patientUsers = response.data.filter(user => user.role === 'patient');
+            const patientUsers = response.data.filter(user => user.role === 'patient' );
             setPatients(patientUsers);
         } catch (err) {
             console.error('Error fetching patients:', err);
