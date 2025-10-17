@@ -6,9 +6,9 @@ import { protect, authorize } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 // Only admins can create/update/delete users
-router.post('/', protect, authorize('admin', 'hospitaladmin' ), upload.single('profileImage'), createUser);
-router.put('/:id', protect, authorize('admin'), upload.single('profileImage'), updateUser);
-router.delete('/:id', protect, authorize('admin'), deleteUser);
+router.post('/', protect, authorize('admin','hospitaladmin'), upload.single('profileImage'), createUser);
+router.put('/:id', protect, authorize('admin','hospitaladmin'), upload.single('profileImage'), updateUser);
+router.delete('/:id', protect, authorize('admin','hospitaladmin'), deleteUser);
 
 // Any authenticated user can view
 router.get('/', protect, authorize('admin', 'doctor', 'hospitaladmin'), getUsers);

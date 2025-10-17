@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/api';
 
-export default function Dashboard() {
+export default function HospitalAdminManagement() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -28,6 +28,8 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, admin: null });
 
   useEffect(() => {
     fetchDashboardStats();
@@ -64,17 +66,61 @@ export default function Dashboard() {
     }
   };
 
+  const handleEdit = (adminId) => {
+    navigate(`/admin/edit-hospital-manager/${adminId}`);
+  };
+
+  const handleDelete = async (adminId) => {
+    try {
+      await api.delete(`/users/${adminId}`);
+      setMessage('✅ Hospital admin deleted successfully!');
+      fetchHospitalAdmins(); // Refresh the list
+      setDeleteConfirm({ show: false, admin: null });
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Something went wrong';
+      setMessage(`❌ Error deleting admin: ${errorMsg}`);
+      setDeleteConfirm({ show: false, admin: null });
+    }
+  };
+
+  const handleAdd = () => {
+    navigate('/admin/add-hospital-manager');
+  };
+
+  const filteredAdmins = hospitalAdmins.filter(admin =>
+    admin.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Access Denied Component
   if (user?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
+        >
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="text-red-600" size={32} />
+          </div>
           <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600">Only administrators can access this page.</p>
-        </div>
+          <p className="text-gray-600 mb-6">
+            You don't have permission to access this page. Only administrators can manage hospital admins.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium"
+          >
+            Return to Home
+          </button>
+        </motion.div>
       </div>
     );
   }
 
+  // Loading State
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -199,7 +245,59 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm.show && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setDeleteConfirm({ show: false, admin: null })}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <Trash2 className="text-red-600" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Delete Hospital Admin</h3>
+                  <p className="text-sm text-gray-500">This action cannot be undone</p>
+                </div>
+              </div>
+
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete <strong>{deleteConfirm.admin?.name}</strong>? 
+                This will permanently remove their admin access and all associated data.
+              </p>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteConfirm({ show: false, admin: null })}
+                  className="px-4 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteConfirm.admin?._id)}
+                  className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Delete Admin
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
