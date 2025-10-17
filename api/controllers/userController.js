@@ -37,8 +37,9 @@ export const createUser = async (req, res) => {
       bio,
     } = req.body;
 
-    // Step 1: Create basic user
-    const user = new User({ name, email, password, phone, role });
+    const hospital = role !== 'hospitaladmin' ? req.user?.hospital : null;
+
+    const user = new User({ name, email, password, phone, role, hospital });
 
     if (req.file) user.profileImage = req.file.path;
 
@@ -56,7 +57,6 @@ export const createUser = async (req, res) => {
         }
         return field;
       };
-
       const history = new PatientHistory({
         user: user._id,
         dateOfBirth,
@@ -103,7 +103,6 @@ export const createUser = async (req, res) => {
 
     // ------------------- DOCTOR -------------------
     if (role === 'doctor') {
-      const hospital = req.user?.hospital; // Optional hospital link
       const doctorDetails = new DoctorDetails({
         user: user._id,
         specialty,
@@ -115,7 +114,6 @@ export const createUser = async (req, res) => {
         bio,
         notes: notes || '',
         profileImage: req.file ? req.file.path : null,
-        hospital,
       });
 
       await doctorDetails.save();
@@ -155,16 +153,24 @@ export const createUser = async (req, res) => {
 // --------------------
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find()
+    let filter = {};
+
+    if (req.user.role === 'hospitaladmin') {
+      filter.hospital = req.user.hospital; // filter only users in their hospital
+    }
+
+    const users = await User.find(filter)
       .populate('patientHistory')
       .populate('doctorDetails')
       .populate('hospital');
+
     res.json(users);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
 
 // --------------------
 // GET SINGLE USER BY ID

@@ -3,12 +3,31 @@ import DoctorDetails from '../models/DoctorDetails.js';
 // Get all doctor details
 export const getAllDoctorDetails = async (req, res) => {
   try {
-    const doctors = await DoctorDetails.find().populate('user').populate('hospital');
-    res.json(doctors);
+    const doctors = await DoctorDetails.find()
+      .populate({
+        path: 'user',
+        populate: { path: 'hospital' } 
+      })
+      .populate('hospital'); 
+
+    let result = doctors;
+
+    if (req.user.role !== 'admin') {
+      const reqHospitalId = req.user?.hospital?._id?.toString();
+      result = doctors.filter(doc => {
+        const userHospitalId = doc.user?.hospital?._id?.toString();
+        return userHospitalId === reqHospitalId;
+      });
+    }
+
+    res.status(200).json(result);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching doctor details:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+
 
 // Get single doctor details by ID
 export const getDoctorDetailsById = async (req, res) => {
