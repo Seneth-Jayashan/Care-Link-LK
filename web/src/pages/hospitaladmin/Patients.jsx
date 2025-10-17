@@ -440,7 +440,7 @@ const PatientManagement = () => {
                                                         </div>
                                                     </td>
                                                     <td className="py-4 px-6 text-gray-600">{patient.phone || 'N/A'}</td>
-                                                    <td className="py-4 px-6 font-medium">{patient.bloodGroup || 'N/A'}</td>
+                                                    <td className="py-4 px-6 font-medium">{patient.patientHistory.bloodGroup || 'N/A'}</td>
                                                     <td className="py-4 px-6 text-gray-600">{new Date(patient.createdAt).toLocaleDateString()}</td>
                                                     <td className="py-4 px-6">
                                                         <div className="flex justify-center gap-2">

@@ -76,7 +76,6 @@ const Sidebar = () => {
       { name: "Doctors", to: hasHospital ? "/hospital/doctors" : "/hospital/details", icon: Stethoscope },
       { name: "Patients", to: hasHospital ? "/hospital/patients" : "/hospital/details", icon: HeartPulse },
       { name: "Hospital", to: "/hospital/details", icon: Building2 },
-      { name: "Settings", to: hasHospital ? "/hospital/settings" : "/hospital/details", icon: Settings },
     ],
     admin: [
       { name: "System Dashboard", to: "/admin", icon: LayoutDashboard },
