@@ -22,6 +22,7 @@ const Sidebar = () => {
   const roleMenus = {
     patient: [
       { name: "Dashboard", to: "/patient", icon: LayoutDashboard },
+      { name: "Doctors", to: "/patient/doctors", icon: LayoutDashboard },
       { name: "My Appointments", to: "/patient/appointments", icon: HeartPulse },
       { name: "Profile", to: "/patient/profile", icon: User },
     ],

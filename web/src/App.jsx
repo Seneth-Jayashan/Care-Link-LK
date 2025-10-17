@@ -13,6 +13,8 @@ import Login from "./pages/Login";
 
 import PatientDashboard from "./pages/patient/Dashboard";
 import PatientProfile from "./pages/patient/Profile.jsx";
+import DisplayDoctors from "./pages/patient/DisplayDoctors.jsx";
+import DoctorDetailPage from "./pages/patient/DoctorDetailPage.jsx";
 
 import DoctorDashboard from "./pages/doctor/Dashboard";
 
@@ -83,6 +85,28 @@ function App() {
           <PrivateRoute roles={["patient"]}>
             <DashboardLayout>
               <PatientProfile />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/patient/doctors"
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+              <DisplayDoctors/>
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+       <Route
+        path="/doctor/:id" 
+        element={
+          <PrivateRoute roles={["patient"]}>
+            <DashboardLayout>
+             <DoctorDetailPage/>
             </DashboardLayout>
           </PrivateRoute>
         }

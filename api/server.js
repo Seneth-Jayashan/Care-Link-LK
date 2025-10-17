@@ -5,6 +5,7 @@ import routes from './routes.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 import { logger } from './middlewares/loggerMiddleware.js';
 import cors from 'cors';
+import path from "path";
 
 dotenv.config();
 
@@ -24,6 +25,8 @@ app.use(
 
 app.use(express.json());
 app.use(logger);
+
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Routes
 app.use('/api/v1', routes);
