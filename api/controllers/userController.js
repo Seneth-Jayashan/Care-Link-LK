@@ -5,28 +5,27 @@ import DoctorDetails from '../models/DoctorDetails.js';
 import { generatePatientQR } from '../utils/qrGenerator.js';
 import { sendEmailWithQR } from '../utils/sendEmail.js';
 import fs from 'fs';
+import Hospital from '../models/Hospital.js';
 
 // Create User
 export const createUser = async (req, res) => {
+  console.log('hii');
   try {
-    const { name, email, password, phone, role, specialty } = req.body;
 
-    // Create user with provided password (no hash yet, will hash in pre-save hook)
+    const { name, email, password, phone, role } = req.body;
+
     const user = new User({ name, email, password, phone, role });
 
-    // Handle profile image
     if (req.file) user.profileImage = req.file.path;
+      console.log(user);
 
     // ------------------- PATIENT -------------------
     if (role === 'patient') {
-      // Create PatientHistory
       const history = new PatientHistory({ user: user._id });
       await history.save();
       user.patientHistory = history._id;
       await user.save();
 
-      // Generate QR code containing patient info
-      // Recommendation: Only include user._id in the QR code for better security
       const patientData = {
         userId: user._id,
         name: user.name,
@@ -36,8 +35,6 @@ export const createUser = async (req, res) => {
       };
       const qrCodeDataUrl = await generatePatientQR(patientData);
 
-      // Send email with credentials + QR
-      // CRITICAL: Avoid sending the password. Send a password-reset or account-activation link instead.
       await sendEmailWithQR(user.email, 'Your Patient Account QR', qrCodeDataUrl, password);
 
       return res.status(201).json({
@@ -51,26 +48,51 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // ------------------- DOCTOR -------------------
     if (role === 'doctor') {
-      const doctorDetails = new DoctorDetails({ user: user._id, specialty: specialty || '' });
+      const {
+        specialty,
+        qualifications,
+        yearsOfExperience,
+        consultationFee,
+        schedule,
+        languages,
+        bio,
+        notes
+      } = req.body;
+
+      const hospital = req.user.hospital; // securely get hospital from logged-in user
+      const profilePicture = req.file ? req.file.path : null;
+
+      const doctorDetails = new DoctorDetails({
+        user: user._id,
+        specialty,
+        qualifications,
+        yearsOfExperience,
+        consultationFee,
+        schedule: JSON.parse(schedule), // schedule comes as JSON string
+        languages,
+        bio,
+        notes,
+        profileImage:profilePicture,
+        hospital
+      });
+
       await doctorDetails.save();
       user.doctorDetails = doctorDetails._id;
       await user.save();
-      
-      // FIX: Added 'return' to prevent fall-through and sending a second response.
+
       return res.status(201).json({
-        message: `${role} created successfully`,
+        message: 'Doctor created successfully',
         user: {
           _id: user._id,
           name: user.name,
           email: user.email,
           phone: user.phone,
           role: user.role,
+          doctorDetails: doctorDetails._id
         },
       });
     }
-
     // ------------------- HOSPITAL ADMIN / OTHERS -------------------
     // This part will now only be reached for roles other than 'patient' and 'doctor'
     await user.save(); // Save user if not already saved in a specific role block
@@ -86,6 +108,8 @@ export const createUser = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+      console.log('hii');
+
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -166,11 +190,21 @@ export const updateUser = async (req, res) => {
 // --------------------
 export const deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const {id} = req.params;
+    const user = await User.findByIdAndDelete(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+    console.log(user);
+    if(user.role === 'patient'){
+      await PatientHistory.findOneAndDelete({user:id});
+    }else if(user.role === 'doctor'){
+      await DoctorDetails.findOneAndDelete({user: id});
+    }else if(user.role === 'hospitaladmin'){
+      await Hospital.findByIdAndDelete({hospitalAdmins:id});
+    }
 
     // Delete profile image if exists
     if (user.profileImage && fs.existsSync(user.profileImage)) fs.unlinkSync(user.profileImage);
+
 
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
