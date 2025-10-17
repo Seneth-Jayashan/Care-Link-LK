@@ -157,7 +157,7 @@ export default function Dashboard() {
                     <p className="text-blue-600 text-sm">{new Date(app.appointmentDate).toLocaleDateString()} • {app.appointmentTime}</p>
                     <p className="text-blue-500 text-xs">{app.status}</p>
                   </div>
-                  <button onClick={() => navigate('/my-appointments')} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm">
+                  <button onClick={() => navigate(`/patient/appointments#${app._id}`)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm">
                     View
                   </button>
                 </div>
@@ -168,20 +168,10 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <QuickAction icon={Bell} label="Appointments" description="Manage your bookings" onClick={() => navigate('/my-appointments')} color="bg-purple-100" />
-          <QuickAction icon={FileText} label="Medical Records" description="View your health history" onClick={() => navigate('/medical-records')} color="bg-green-100" />
-          <QuickAction icon={Shield} label="Insurance" description="Check your coverage" onClick={() => navigate('/insurance')} color="bg-orange-100" />
-        </motion.div>
-
         {/* Health Tip */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl text-white p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Heart /> Health Tip</h2>
-          <p className="text-blue-100 mb-4">Stay hydrated and take regular breaks for your physical and mental well-being.</p>
-          <button className="w-full bg-white text-blue-600 py-2 rounded-xl font-semibold hover:bg-blue-50 transition-all">
-            Learn More
-          </button>
+          <p className="text-blue-100 mb-4 text-center">Stay hydrated and take regular breaks for your physical and mental well-being.</p>  
         </motion.div>
       </div>
     </div>

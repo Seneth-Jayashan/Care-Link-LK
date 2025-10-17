@@ -104,12 +104,14 @@ const Sidebar = () => {
     >
       {/* Logo */}
       <div className="flex items-center justify-center h-16 border-b border-gray-200">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <Stethoscope className="text-white" size={18} />
+        <Link to="/">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <Stethoscope className="text-white" size={18} />
+            </div>
+            <span className="text-xl font-bold text-gray-900">Care Link</span>
           </div>
-          <span className="text-xl font-bold text-gray-900">Care Link</span>
-        </div>
+        </Link>
       </div>
 
       {/* Menu Items */}
