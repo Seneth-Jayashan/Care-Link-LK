@@ -143,35 +143,60 @@ const MyAppointments = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="animate-spin text-blue-500 mx-auto" size={48} />
+          <p className="text-blue-600 mt-4 text-lg">Loading your appointments...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-10 px-4 bg-red-50 rounded-lg">
-        <AlertCircle className="mx-auto text-red-500" size={48} />
-        <h3 className="mt-4 text-xl font-semibold text-red-800">An Error Occurred</h3>
-        <p className="text-red-600 mt-2">{error}</p>
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-100 p-8 max-w-md w-full">
+          <AlertCircle className="mx-auto text-red-500" size={64} />
+          <h3 className="mt-6 text-2xl font-bold text-red-800">An Error Occurred</h3>
+          <p className="text-red-600 mt-4 text-lg">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-3 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">My Appointments</h1>
+    <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen transition-all duration-500">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-700 to-blue-400 bg-clip-text text-transparent tracking-tight">
+            My Appointments
+          </h1>
+          <p className="text-blue-600 mt-2 text-lg">Manage and view your upcoming and past appointments</p>
+        </div>
 
         {/* Upcoming Appointments Section */}
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-6 flex items-center gap-3">
-            <Calendar className="text-blue-500" />
-            Upcoming Appointments
-          </h2>
+        <section className="mb-12">
+          <div className="bg-gradient-to-r from-blue-200 to-blue-100 p-6 rounded-2xl shadow-lg border border-blue-200 mb-6">
+            <h2 className="text-2xl font-bold text-blue-900 flex items-center gap-3">
+              <Calendar size={28} className="text-blue-600" />
+              Upcoming Appointments
+              {upcomingAppointments.length > 0 && (
+                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                  {upcomingAppointments.length}
+                </span>
+              )}
+            </h2>
+          </div>
+          
           {upcomingAppointments.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {upcomingAppointments.map(app => (
                 <div key={app._id} className="space-y-3">
                   <AppointmentCard appointment={app} />
@@ -205,30 +230,58 @@ const MyAppointments = () => {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 bg-white p-6 rounded-lg shadow-sm">
-              You have no upcoming appointments.
-            </p>
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-8 text-center">
+              <Clock className="mx-auto text-blue-400" size={64} />
+              <h3 className="text-xl font-bold text-blue-900 mt-4">No Upcoming Appointments</h3>
+              <p className="text-blue-600 mt-2">You don't have any scheduled appointments at the moment.</p>
+            </div>
           )}
         </section>
 
         {/* Past Appointments Section */}
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-6 flex items-center gap-3">
-            <History className="text-blue-500" />
-            Past Appointments
-          </h2>
+        <section>
+          <div className="bg-gradient-to-r from-blue-200 to-blue-100 p-6 rounded-2xl shadow-lg border border-blue-200 mb-6">
+            <h2 className="text-2xl font-bold text-blue-900 flex items-center gap-3">
+              <History size={28} className="text-blue-600" />
+              Past Appointments
+              {pastAppointments.length > 0 && (
+                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                  {pastAppointments.length}
+                </span>
+              )}
+            </h2>
+          </div>
+          
           {pastAppointments.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {pastAppointments.map(app => (
                 <AppointmentCard key={app._id} appointment={app} />
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 bg-white p-6 rounded-lg shadow-sm">
-              You have no past appointment records.
-            </p>
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-8 text-center">
+              <User className="mx-auto text-blue-400" size={64} />
+              <h3 className="text-xl font-bold text-blue-900 mt-4">No Past Appointments</h3>
+              <p className="text-blue-600 mt-2">Your appointment history will appear here.</p>
+            </div>
           )}
         </section>
+
+        {/* Quick Stats */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl border border-blue-200 p-6 text-center">
+            <div className="text-3xl font-bold text-blue-900">{appointments.length}</div>
+            <div className="text-blue-600 font-semibold">Total Appointments</div>
+          </div>
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl border border-blue-200 p-6 text-center">
+            <div className="text-3xl font-bold text-blue-900">{upcomingAppointments.length}</div>
+            <div className="text-blue-600 font-semibold">Upcoming</div>
+          </div>
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl border border-blue-200 p-6 text-center">
+            <div className="text-3xl font-bold text-blue-900">{pastAppointments.length}</div>
+            <div className="text-blue-600 font-semibold">Completed</div>
+          </div>
+        </div>
       </div>
 
       {editModalOpen && (
