@@ -3,28 +3,22 @@ import DoctorCard from "./DoctorCard";
 import DoctorDetailModal from "./DoctorDetailModal";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../api/api";
-import { Search, Filter, X, Users, Award, Clock, MapPin, Star } from "lucide-react";
+import { Search, Filter, X, Users, Award, Clock, Stethoscope } from "lucide-react";
 
-// Modern Skeleton Component
 const DoctorCardSkeleton = () => (
-  <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 animate-pulse">
+  <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 border border-blue-100 shadow-lg animate-pulse">
     <div className="flex items-start space-x-4">
-      <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl"></div>
+      <div className="w-20 h-20 bg-blue-200 rounded-2xl"></div>
       <div className="flex-1 space-y-3">
-        <div className="h-6 bg-gray-200 rounded-lg w-3/4"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        <div className="flex items-center space-x-4 mt-3">
-          <div className="h-6 bg-gray-200 rounded w-20"></div>
-          <div className="h-6 bg-gray-200 rounded w-16"></div>
-        </div>
-        <div className="h-10 bg-gray-200 rounded-xl w-full mt-4"></div>
+        <div className="h-6 bg-blue-200 rounded w-3/4"></div>
+        <div className="h-4 bg-blue-200 rounded w-1/2"></div>
+        <div className="h-4 bg-blue-200 rounded w-2/3"></div>
       </div>
     </div>
   </div>
 );
 
-const DisplayDoctors = () => {
+export default function DisplayDoctors() {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +33,7 @@ const DisplayDoctors = () => {
         setLoading(true);
         setError(null);
         const res = await api.get("/doctors");
-        const validDoctors = res.data.filter(doc => doc.user && typeof doc.user === 'object');
+        const validDoctors = res.data.filter((doc) => doc.user && typeof doc.user === "object");
         setDoctors(validDoctors);
       } catch (err) {
         console.error("Error fetching doctors:", err);
@@ -52,190 +46,120 @@ const DisplayDoctors = () => {
   }, []);
 
   const specialties = useMemo(() => {
-    const uniqueSpecialties = [...new Set(doctors.map(doc => doc.specialty))];
-    return ["All", ...uniqueSpecialties];
+    const unique = [...new Set(doctors.map((doc) => doc.specialty))];
+    return ["All", ...unique];
   }, [doctors]);
 
   const filteredDoctors = useMemo(() => {
-    return doctors.filter(doctor => {
-      const matchesSearch = 
-        doctor.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesSpecialty = 
-        selectedSpecialty === "All" || doctor.specialty === selectedSpecialty;
-
-      return matchesSearch && matchesSpecialty;
+    return doctors.filter((d) => {
+      const search =
+        d.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.specialty.toLowerCase().includes(searchTerm.toLowerCase());
+      const match = selectedSpecialty === "All" || d.specialty === selectedSpecialty;
+      return search && match;
     });
   }, [doctors, searchTerm, selectedSpecialty]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      {/* Enhanced Header */}
-      <div className="relative bg-white border-b border-gray-100">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-blue-500/5"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-bold text-gray-900 mb-6 tracking-tight"
-            >
-              Find Your Perfect
-              <span className="block bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
-                Healthcare Specialist
-              </span>
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed"
-            >
-              Connect with certified medical professionals dedicated to your health and well-being
-            </motion.p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 transition-all duration-500">
 
-      {/* Modern Stats Bar */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center justify-center space-x-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100"
-            >
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{doctors.length}+</div>
-                <div className="text-sm text-gray-600 font-medium">Qualified Doctors</div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center justify-center space-x-4 p-4 bg-green-50/50 rounded-2xl border border-green-100"
-            >
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Award className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{specialties.length - 1}</div>
-                <div className="text-sm text-gray-600 font-medium">Medical Specialties</div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex items-center justify-center space-x-4 p-4 bg-purple-50/50 rounded-2xl border border-purple-100"
-            >
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <Clock className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">24/7</div>
-                <div className="text-sm text-gray-600 font-medium">Available Support</div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
+      {/* 🌟 HERO SECTION with compact filter/search slot */}
+      <div className="bg-blue-100/60 border-b border-blue-200 py-10">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl md:text-4xl font-extrabold text-blue-800 mb-2"
+          >
+            Find Your Doctor
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-blue-600 text-base md:text-lg mb-6"
+          >
+            Search, filter, and connect with trusted medical professionals
+          </motion.p>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Enhanced Search and Filter Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-12"
-        >
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            {/* Search Bar */}
-            <div className="relative mb-6">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          {/* 🔍 Compact Search + Filter Bar */}
+          <div className="bg-white/80 backdrop-blur-md border border-blue-200 rounded-full shadow-sm flex flex-col sm:flex-row items-stretch overflow-hidden max-w-3xl mx-auto">
+            <div className="flex items-center flex-grow px-4">
+              <Search className="h-5 w-5 text-blue-400" />
               <input
                 type="text"
-                placeholder="Search by doctor name, specialty, or expertise..."
+                placeholder="Search by name or specialty..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg placeholder-gray-400"
+                className="flex-grow px-3 py-3 bg-transparent outline-none text-blue-800 placeholder-blue-400"
               />
             </div>
 
-            {/* Filter Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center space-x-3 px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium shadow-sm"
-                >
-                  <Filter className="h-4 w-4" />
-                  <span>Filter Specialties</span>
-                </button>
-                
-                {selectedSpecialty !== "All" && (
-                  <button
-                    onClick={() => setSelectedSpecialty("All")}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-100 transition-all duration-200 border border-blue-200"
-                  >
-                    <span>{selectedSpecialty}</span>
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-
-              <div className="text-lg font-semibold text-gray-700">
-                {filteredDoctors.length} {filteredDoctors.length === 1 ? 'Specialist' : 'Specialists'} Available
-              </div>
-            </div>
-
-            {/* Specialty Filters */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="pt-6 border-t border-gray-100 mt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse by Specialty</h3>
-                    <div className="flex flex-wrap gap-3">
-                      {specialties.map(spec => (
-                        <button
-                          key={spec}
-                          onClick={() => {
-                            setSelectedSpecialty(spec);
-                            setShowFilters(false);
-                          }}
-                          className={`px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 border-2 ${
-                            selectedSpecialty === spec
-                              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                              : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-                          }`}
-                        >
-                          {spec}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-semibold hover:from-blue-700 hover:to-blue-500 transition-all duration-200"
+            >
+              <Filter className="h-4 w-4" />
+              Filter
+            </button>
           </div>
-        </motion.div>
 
-        {/* Enhanced Content Grid */}
+          {/* Specialty Dropdown (short slot style) */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mt-4"
+              >
+                <div className="flex flex-wrap justify-center gap-3 px-4">
+                  {specialties.map((spec) => (
+                    <button
+                      key={spec}
+                      onClick={() => {
+                        setSelectedSpecialty(spec);
+                        setShowFilters(false);
+                      }}
+                      className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-200 ${
+                        selectedSpecialty === spec
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+                      }`}
+                    >
+                      {spec}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Stats Row (mini) */}
+          <div className="flex justify-center gap-6 mt-8 flex-wrap">
+            {[
+              { icon: <Users className="h-4 w-4 text-blue-600" />, value: `${doctors.length}+`, label: "Doctors" },
+              { icon: <Award className="h-4 w-4 text-blue-600" />, value: specialties.length - 1, label: "Specialties" },
+              { icon: <Clock className="h-4 w-4 text-blue-600" />, value: "24/7", label: "Service" },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * i }}
+                className="flex items-center space-x-2 bg-white border border-blue-100 rounded-xl px-4 py-2 shadow-sm"
+              >
+                {item.icon}
+                <span className="text-blue-800 font-semibold">{item.value}</span>
+                <span className="text-blue-500 text-sm">{item.label}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 🧑‍⚕️ DOCTORS GRID */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -243,87 +167,59 @@ const DisplayDoctors = () => {
             ))}
           </div>
         ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm"
-          >
-            <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <div className="text-center py-16 bg-white/90 backdrop-blur-md rounded-2xl border border-blue-200 shadow-lg">
+            <div className="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <X className="h-10 w-10 text-red-500" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Connection Issue</h3>
-            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">{error}</p>
+            <h3 className="text-2xl font-bold text-blue-900 mb-3">Connection Issue</h3>
+            <p className="text-blue-600 text-lg mb-8 max-w-md mx-auto">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold shadow-sm"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl hover:from-blue-700 hover:to-blue-500 transition-all duration-200 font-semibold"
             >
               Refresh Page
             </button>
-          </motion.div>
+          </div>
         ) : (
-          <>
-            <motion.div 
-              layout
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredDoctors.length > 0 ? (
-                  filteredDoctors.map((doctor, index) => (
-                    <motion.div
-                      key={doctor._id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ 
-                        delay: index * 0.1,
-                        type: "spring",
-                        stiffness: 100
-                      }}
-                      layout
-                      whileHover={{ 
-                        y: -8,
-                        scale: 1.02,
-                        transition: { duration: 0.2 }
-                      }}
-                      className="transition-all duration-300 transform-gpu"
-                    >
-                      <DoctorCard
-                        doctor={doctor}
-                        onView={() => setSelectedDoctor(doctor)}
-                      />
-                    </motion.div>
-                  ))
-                ) : (
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <AnimatePresence mode="popLayout">
+              {filteredDoctors.length > 0 ? (
+                filteredDoctors.map((doctor, index) => (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="col-span-full text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm"
+                    key={doctor._id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ y: -6, scale: 1.02 }}
                   >
-                    <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                      <Search className="h-10 w-10 text-gray-400" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">No Specialists Found</h3>
-                    <p className="text-gray-600 text-lg mb-6 max-w-md mx-auto">
-                      We couldn't find any doctors matching your search criteria
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSelectedSpecialty("All");
-                      }}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium"
-                    >
-                      Show All Specialists
-                    </button>
+                    <DoctorCard doctor={doctor} onView={() => setSelectedDoctor(doctor)} />
                   </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-16 bg-white rounded-2xl shadow-lg border border-blue-200">
+                  <Search className="mx-auto h-10 w-10 text-blue-400 mb-4" />
+                  <h3 className="text-2xl font-semibold text-blue-900">No Specialists Found</h3>
+                  <p className="text-blue-600 mt-2 mb-6">
+                    Try adjusting your search or filters
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSelectedSpecialty("All");
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl hover:from-blue-700 hover:to-blue-500 transition-all duration-200"
+                  >
+                    Show All
+                  </button>
+                </div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
 
-      {/* Doctor Detail Modal */}
+      {/* MODAL */}
       <AnimatePresence>
         {selectedDoctor && (
           <DoctorDetailModal
@@ -334,6 +230,4 @@ const DisplayDoctors = () => {
       </AnimatePresence>
     </div>
   );
-};
-
-export default DisplayDoctors;
+}
