@@ -18,7 +18,9 @@ import {
     HeartPulse,
     Sparkles,
 } from "lucide-react";
-import api from "../../api/api"; // centralized axios instance
+import { useNavigate } from "react-router-dom"; // 👈 Import useNavigate
+import Swal from "sweetalert2"; // 👈 Import SweetAlert2
+import api from "../../api/api";
 
 // ------------------- Reusable Components (Color Updated) -------------------
 
@@ -105,7 +107,6 @@ const InputField = ({ label, name, value, onChange, ...props }) => (
         />
     </div>
 );
-
 
 // ------------------- Main Component -------------------
 
@@ -214,6 +215,16 @@ export default function HospitalManagement() {
             facilities: hospital.facilities?.length ? hospital.facilities : initialFormData.facilities,
         });
         setIsEditing(true);
+        const res = await api.get(`/hospitals/${hospitalId}`);
+        setHospital(res.data);
+        setActiveTab("view");
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ // 👈 Use Swal for error feedback
+            icon: 'error',
+            title: 'Loading Failed',
+            text: 'Could not load hospital data. Please try again.'
+        });
         setActiveTab("add");
     };
 
@@ -309,6 +320,159 @@ export default function HospitalManagement() {
                     <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Star size={16} className="text-yellow-500" /> Rating</h4>
                     <p className="text-gray-700 text-lg font-bold">{hospital.rating || "N/A"} / 5</p>
                 </div>
+    fetchHospital();
+  }, [user.id]); // Added user.id to dependency array for correctness
+
+
+  // ------------------- DELETE -------------------
+  const handleDeleteConfirm = () => setIsDeleting(true);
+
+  const deleteHospitalApi = async () => {
+    if (!hospital) return;
+    setIsSubmitting(true);
+    setIsDeleting(false);
+
+    try {
+      await api.delete(`/hospitals/${hospital._id}`);
+      await Swal.fire({ // 👈 Use Swal for success feedback
+        icon: 'success',
+        title: 'Deleted!',
+        text: `Hospital "${hospital.name}" was deleted successfully.`,
+        timer: 2000,
+        showConfirmButton: false
+      });
+      setHospital(null);
+      setActiveTab("add");
+      resetFormData();
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Something went wrong";
+      Swal.fire({ // 👈 Use Swal for error feedback
+        icon: 'error',
+        title: 'Deletion Failed',
+        text: errorMsg,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ------------------- EDIT -------------------
+  const startEdit = () => {
+    if (!hospital) return;
+    setFormData({
+      ...initialFormData,
+      ...hospital,
+      address: hospital.address || initialFormData.address,
+      contact: hospital.contact || initialFormData.contact,
+      departments: hospital.departments?.length ? hospital.departments : initialFormData.departments,
+      facilities: hospital.facilities?.length ? hospital.facilities : initialFormData.facilities,
+    });
+    setIsEditing(true);
+    setActiveTab("add");
+  };
+
+  // ------------------- FORM HANDLERS -------------------
+  // (No changes to form handlers: handleChange, department, and facility handlers)
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes(".")) {
+      const [section, key] = name.split(".");
+      setFormData((prev) => ({
+        ...prev,
+        [section]: { ...prev[section], [key]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleDepartmentChange = (index, field, value) => {
+    const updated = [...formData.departments];
+    updated[index][field] = value;
+    setFormData((prev) => ({ ...prev, departments: updated }));
+  };
+  const addDepartment = () =>
+    setFormData((prev) => ({
+      ...prev,
+      departments: [...prev.departments, { name: "", description: "" }],
+    }));
+  const removeDepartment = (index) =>
+    setFormData((prev) => ({
+      ...prev,
+      departments: prev.departments.filter((_, i) => i !== index),
+    }));
+
+  const handleFacilityChange = (index, value) => {
+    const updated = [...formData.facilities];
+    updated[index] = value;
+    setFormData((prev) => ({ ...prev, facilities: updated }));
+  };
+  const addFacility = () =>
+    setFormData((prev) => ({ ...prev, facilities: [...prev.facilities, ""] }));
+  const removeFacility = (index) =>
+    setFormData((prev) => ({
+      ...prev,
+      facilities: prev.facilities.filter((_, i) => i !== index),
+    }));
+
+  // ------------------- SUBMIT -------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      if (isEditing) {
+        const res = await api.put(`/hospitals/${hospital._id}`, formData);
+        setHospital(res.data);
+        Swal.fire({ // 👈 Use Swal for update success
+          icon: 'success',
+          title: 'Updated!',
+          text: 'Hospital details updated successfully.',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        setIsEditing(false);
+        setActiveTab("view");
+      } else {
+        const res = await api.post("/hospitals", formData);
+        setHospital(res.data);
+        await Swal.fire({ // 👈 Use Swal for creation success
+          icon: 'success',
+          title: 'Created!',
+          text: 'Hospital created successfully!',
+          timer: 1500, // Shorter timer before redirect
+          showConfirmButton: false,
+        });
+        navigate("/hospital"); // 👈 REDIRECT on success
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Something went wrong";
+      Swal.fire({ // 👈 Use Swal for submission errors
+        icon: 'error',
+        title: 'Submission Error',
+        text: errorMsg,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ------------------- UI RENDER -------------------
+  // (No changes to render functions: renderViewContent, renderFormComponent)
+  const renderViewContent = () => (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+        <SectionHeader icon={Building} title={hospital.name} subtitle={`Code: ${hospital.code}`} />
+
+        <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><MapPin size={16}/> Address</h4>
+                <p className="text-gray-600">{hospital.address.street}, {hospital.address.city}, {hospital.address.district}</p>
+                <p className="text-gray-600">{hospital.address.province}, {hospital.address.country}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><Phone size={16}/> Contact</h4>
+                <p className="text-gray-600">Phone: {hospital.contact.phone}</p>
+                <p className="text-gray-600">Email: {hospital.contact.email}</p>
             </div>
 
             {/* Departments */}
@@ -511,6 +675,31 @@ export default function HospitalManagement() {
                     )}
                 </div>
             </motion.div>
+          </div>
+          <div className="flex bg-white/20 rounded-xl p-1">
+            <TabButton
+              id="view"
+              label="Details"
+              icon={List}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              disabled={!hospital}
+            />
+            {!hospital && (
+              <TabButton
+                id="add"
+                label="Add"
+                icon={Plus}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                onClick={() => resetFormData()}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* --- Message Bar Removed --- */}
+        {/* The old message bar is no longer needed as Swal handles notifications */}
 
             <ConfirmationDialog
                 isOpen={isDeleting}
