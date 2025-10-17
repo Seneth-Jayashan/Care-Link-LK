@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import reportsApi from '../../api/reports';
-import { Download, FileText, BarChart3, TrendingUp, Calendar } from 'lucide-react';
+import { Download, FileText, BarChart3, TrendingUp, Calendar, Building2 } from 'lucide-react';
 
 const defaultRange = () => {
   const end = new Date();
@@ -150,121 +150,132 @@ export default function Reports() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Reports</h2>
-          <p className="text-gray-600">Finance and patient visit analytics for your hospital</p>
-        </div>
-        <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
-          <Calendar size={16} className="text-gray-500" />
-          <span>{range.startDate}</span>
-          <span>→</span>
-          <span>{range.endDate}</span>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b">
-        {['finance', 'visits'].map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 -mb-px border-b-2 transition-colors ${tab === t ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-900'}`}
-          >
-            {t === 'finance' ? 'Finance' : 'Patient Visits'}
-          </button>
-        ))}
-      </div>
-      
-      {/* Controls */}
-      <div className="flex flex-wrap items-end gap-4 bg-white border border-gray-200 rounded-xl p-4">
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Start Date</label>
-          <input
-            type="date"
-            value={range.startDate}
-            onChange={(e) => setRange((r) => ({ ...r, startDate: e.target.value }))}
-            className="border rounded-lg px-3 py-2 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">End Date</label>
-          <input
-            type="date"
-            value={range.endDate}
-            onChange={(e) => setRange((r) => ({ ...r, endDate: e.target.value }))}
-            className="border rounded-lg px-3 py-2 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-        <div className="flex gap-2">
-          <button
-          onClick={loadReports}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm"
-          disabled={loading}
-          >
-            {loading ? 'Loading…' : 'Refresh'}
-          </button>
-          <div className="flex items-center gap-2">
-            <select
-              value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value)}
-              className="border rounded-lg px-2 py-2 text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            >
-              <option value="csv">CSV</option>
-              <option value="pdf">PDF</option>
-            </select>
-            <button
-              onClick={() => {
-                if (exportFormat === 'csv') return exportCSV();
-                if (exportFormat === 'pdf') return exportPDF();
-              }}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow-sm inline-flex items-center gap-2"
-            >
-              <Download size={16} /> Export
-            </button>
-          </div>
-          <button
-            onClick={() => setRange(defaultRange())}
-            className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-200"
-          >
-            Last 30 days
-          </button>
-          <button
-            onClick={() => {
-              const end = new Date();
-              const start = new Date();
-              start.setDate(end.getDate() - 6);
-              setRange({ startDate: start.toISOString().slice(0,10), endDate: end.toISOString().slice(0,10) });
-            }}
-            className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-200"
-          >
-            Last 7 days
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map(({ label, value, icon: Icon, tone }) => (
-          <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-500">{label}</div>
-                <div className="text-xl font-semibold text-gray-900 mt-1">{value}</div>
-              </div>
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${tone} text-white flex items-center justify-center`}>
-                <Icon size={18} />
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border border-blue-100">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-inner">
+          <div className="flex items-center gap-4 text-white">
+            <div className="w-12 h-12 bg-white/30 rounded-xl flex items-center justify-center shadow-md">
+              <Building2 size={26} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Reports</h2>
+              <p className="text-blue-100 text-sm">Finance and patient visit analytics for your hospital</p>
             </div>
           </div>
-        ))}
-      </div>
+          {/* Tabs */}
+          <div className="flex bg-white/20 rounded-xl p-1 shadow-inner">
+            {['finance', 'visits'].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition rounded-xl ${tab === t ? '' : 'text-white hover:bg-white/10'}`}
+              >
+                {tab === t && (
+                  <div className="absolute inset-0 bg-white rounded-xl z-0 shadow-md" />
+                )}
+                <span className={`relative z-10 ${tab === t ? 'text-blue-700 font-bold' : ''}`}>{t === 'finance' ? 'Finance' : 'Patient Visits'}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {error && (
-        <div className="bg-red-50 text-red-700 px-4 py-2 rounded">{error}</div>
-      )}
+        {/* Controls */}
+        <div className="p-6 md:p-8 border-b border-gray-100">
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={range.startDate}
+                onChange={(e) => setRange((r) => ({ ...r, startDate: e.target.value }))}
+                className="border rounded-lg px-3 py-2 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">End Date</label>
+              <input
+                type="date"
+                value={range.endDate}
+                onChange={(e) => setRange((r) => ({ ...r, endDate: e.target.value }))}
+                className="border rounded-lg px-3 py-2 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={loadReports}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm"
+                disabled={loading}
+              >
+                {loading ? 'Loading…' : 'Refresh'}
+              </button>
+              <div className="flex items-center gap-2">
+                <select
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value)}
+                  className="border rounded-lg px-2 py-2 text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                >
+                  <option value="csv">CSV</option>
+                  <option value="pdf">PDF</option>
+                </select>
+                <button
+                  onClick={() => {
+                    if (exportFormat === 'csv') return exportCSV();
+                    if (exportFormat === 'pdf') return exportPDF();
+                  }}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow-sm inline-flex items-center gap-2"
+                >
+                  <Download size={16} /> Export
+                </button>
+              </div>
+              <button
+                onClick={() => setRange(defaultRange())}
+                className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-200"
+              >
+                Last 30 days
+              </button>
+              <button
+                onClick={() => {
+                  const end = new Date();
+                  const start = new Date();
+                  start.setDate(end.getDate() - 6);
+                  setRange({ startDate: start.toISOString().slice(0,10), endDate: end.toISOString().slice(0,10) });
+                }}
+                className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-200"
+              >
+                Last 7 days
+              </button>
+            </div>
+            <div className="ml-auto hidden md:flex items-center gap-2 text-sm text-gray-600">
+              <Calendar size={16} className="text-gray-500" />
+              <span>{range.startDate}</span>
+              <span>→</span>
+              <span>{range.endDate}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 md:p-8 space-y-6">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {kpis.map(({ label, value, icon: Icon, tone }) => (
+              <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-gray-500">{label}</div>
+                    <div className="text-xl font-semibold text-gray-900 mt-1">{value}</div>
+                  </div>
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${tone} text-white flex items-center justify-center`}>
+                    <Icon size={18} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-700 px-4 py-2 rounded">{error}</div>
+          )}
 
       {tab === 'finance' && (
       <section className="space-y-4">
@@ -345,7 +356,6 @@ export default function Reports() {
         )}
       </section>
       )}
-
       {tab === 'visits' && (
       <section className="space-y-4">
         <h3 className="text-lg font-semibold mb-3">Patient Visits</h3>
@@ -416,6 +426,8 @@ export default function Reports() {
         )}
       </section>
       )}
+        </div>
+      </div>
     </div>
   );
 }
