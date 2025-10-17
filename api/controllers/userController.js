@@ -1,5 +1,5 @@
 // controllers/userController.js
-import User from '../models/User.js';
+import User from '../models/user.js';
 import PatientHistory from '../models/PatientHistory.js';
 import DoctorDetails from '../models/DoctorDetails.js';
 import { generatePatientQR } from '../utils/qrGenerator.js';
@@ -9,7 +9,6 @@ import Hospital from '../models/Hospital.js';
 
 // Create User
 export const createUser = async (req, res) => {
-  console.log('hii');
   try {
 
     const { name, email, password, phone, role } = req.body;
@@ -17,7 +16,6 @@ export const createUser = async (req, res) => {
     const user = new User({ name, email, password, phone, role });
 
     if (req.file) user.profileImage = req.file.path;
-      console.log(user);
 
     // ------------------- PATIENT -------------------
     if (role === 'patient') {
@@ -108,8 +106,6 @@ export const createUser = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-      console.log('hii');
-
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

@@ -8,8 +8,9 @@ router.get('/', protect, authorize('admin', 'doctor', 'hospitaladmin'), getUsers
 
 
 // Only admins can create/update/delete users
-router.post('/', protect, authorize('admin', 'hospitaladmin' ), upload.single('profilePicture'), createUser);
-router.put('/:id', protect, authorize('admin', 'hospitaladmin' ), upload.single('profileImage'), updateUser);
+router.post('/', protect, authorize('admin', 'hospitaladmin'), upload.single('profileImage'), createUser);
+router.put('/:id', protect, authorize('admin', 'hospitaladmin'), upload.single('profileImage'), updateUser);
+
 router.delete('/:id', protect, authorize('admin', 'hospitaladmin'), deleteUser);
 
 // Any authenticated user can view

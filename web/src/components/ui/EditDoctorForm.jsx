@@ -60,7 +60,7 @@ export default function DoctorForm({ onClose, doctor }) {
     schedule: [{ day: "", startTime: "", endTime: "" }],
     languages: "",
     bio: "",
-    profilePicture: null,
+    profileImage: null,
     notes: "",
   });
   const [errors, setErrors] = useState({});
@@ -81,7 +81,7 @@ export default function DoctorForm({ onClose, doctor }) {
         schedule: doctor.schedule.length ? doctor.schedule : [{ day: "", startTime: "", endTime: "" }],
         languages: (doctor.languages || []).join(", "),
         bio: doctor.bio || "",
-        profilePicture: null,
+        profileImage: null,
         notes: doctor.notes || "",
       });
     }
@@ -121,7 +121,7 @@ export default function DoctorForm({ onClose, doctor }) {
         schedule: JSON.stringify(formData.schedule),
         role: "doctor",
       }).forEach(([key, value]) => {
-        if (key === "profilePicture" && value) data.append("profilePicture", value);
+        if (key === "profileImage" && value) data.append("profileImage", value);
         else data.append(key, value);
       });
 
@@ -168,7 +168,7 @@ export default function DoctorForm({ onClose, doctor }) {
             <CustomInput id="consultationFee" label="Consultation Fee" type="number" icon={DollarSign} value={formData.consultationFee} onChange={handleChange} />
             <CustomInput id="languages" label="Languages (comma-separated)" icon={Languages} value={formData.languages} onChange={handleChange} />
             <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} placeholder="Doctor Bio..." className="w-full p-2 border rounded-xl mt-2"></textarea>
-            <CustomInput id="profilePicture" label="Profile Picture" type="file" icon={ImageIcon} onChange={handleChange} />
+            <CustomInput id="profileImage" label="Profile Picture" type="file" icon={ImageIcon} onChange={handleChange} />
             <CustomInput id="notes" label="Admin Notes" icon={FileText} value={formData.notes} onChange={handleChange} />
           </div>
 
