@@ -88,7 +88,7 @@ const Sidebar = () => {
           { name: "Add", to: "/admin/add-hospital-manager" },
         ],
       },
-      { name: "Users", to: "/admin/users", icon: Users },
+      
     ],
   };
 

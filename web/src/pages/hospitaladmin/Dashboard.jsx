@@ -64,9 +64,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchStats();
 
-    // Optional: auto-refresh every 30 seconds to reflect real-time DB updates
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
+    return () => {};
   }, []);
 
   const StatCard = ({ icon: Icon, label, value, subText, colorFrom, colorTo }) => (

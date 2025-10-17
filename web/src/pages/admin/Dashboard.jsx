@@ -27,17 +27,17 @@ export default function HospitalAdminManagement() {
     totalHospitals: 0,
   });
 
-  const [hospitalAdmins, setHospitalAdmins] = useState([]);
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, admin: null });
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, user: null });
 
-  // Fetch stats and admins
+  // Fetch stats and users
   useEffect(() => {
     fetchDashboardStats();
-    fetchHospitalAdmins();
+    fetchUsers();
   }, []);
 
   // Fetch dashboard statistics
@@ -59,34 +59,34 @@ export default function HospitalAdminManagement() {
     }
   };
 
-  // Fetch hospital admins
-  const fetchHospitalAdmins = async () => {
+  // Fetch all users
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/users?role=hospitaladmin');
-      setHospitalAdmins(res.data);
+      const res = await api.get('/users');
+      setUsersList(res.data);
     } catch (err) {
-      console.error('Failed to fetch hospital admins:', err);
-      setError('Failed to load hospital admins');
+      console.error('Failed to fetch users:', err);
+      setError('Failed to load users');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (adminId) => {
-    navigate(`/admin/edit-hospital-manager/${adminId}`);
+  const handleEdit = (userId) => {
+    navigate(`/admin/edit-hospital-manager/${userId}`);
   };
 
-  const handleDelete = async (adminId) => {
+  const handleDelete = async (userId) => {
     try {
-      await api.delete(`/users/${adminId}`);
-      setMessage('✅ Hospital admin deleted successfully!');
-      fetchHospitalAdmins();
-      setDeleteConfirm({ show: false, admin: null });
+      await api.delete(`/users/${userId}`);
+      setMessage('✅ User deleted successfully!');
+      fetchUsers();
+      setDeleteConfirm({ show: false, user: null });
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Something went wrong';
-      setMessage(`❌ Error deleting admin: ${errorMsg}`);
-      setDeleteConfirm({ show: false, admin: null });
+      setMessage(`❌ Error deleting user: ${errorMsg}`);
+      setDeleteConfirm({ show: false, user: null });
     }
   };
 
@@ -94,11 +94,12 @@ export default function HospitalAdminManagement() {
     navigate('/admin/add-hospital-manager');
   };
 
-  // Filter admins based on search term
-  const filteredAdmins = hospitalAdmins.filter(admin =>
-    admin.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admin.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admin.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter users based on search term
+  const filteredUsers = usersList.filter(u =>
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Access Denied
@@ -205,7 +206,7 @@ export default function HospitalAdminManagement() {
         <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-6">
           <input
             type="text"
-            placeholder="Search hospital admins..."
+            placeholder="Search users..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full mb-4 p-2 rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -217,24 +218,26 @@ export default function HospitalAdminManagement() {
                 <th className="p-3 text-left">Name</th>
                 <th className="p-3 text-left">Email</th>
                 <th className="p-3 text-left">Phone</th>
+                <th className="p-3 text-left">Role</th>
                 <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredAdmins.map(admin => (
-                <tr key={admin._id} className="border-t">
-                  <td className="p-3">{admin.name}</td>
-                  <td className="p-3">{admin.email}</td>
-                  <td className="p-3">{admin.phone}</td>
+              {filteredUsers.map(u => (
+                <tr key={u._id} className="border-t">
+                  <td className="p-3">{u.name}</td>
+                  <td className="p-3">{u.email}</td>
+                  <td className="p-3">{u.phone}</td>
+                  <td className="p-3 capitalize">{u.role}</td>
                   <td className="p-3 flex gap-2">
                     <button
-                      onClick={() => handleEdit(admin._id)}
+                      onClick={() => handleEdit(u._id)}
                       className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-400 shadow hover:shadow-md"
                     >
                       <Edit size={16} /> Edit
                     </button>
                     <button
-                      onClick={() => setDeleteConfirm({ show: true, admin })}
+                      onClick={() => setDeleteConfirm({ show: true, user: u })}
                       className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-white bg-gradient-to-r from-red-600 to-rose-500 shadow hover:shadow-md"
                     >
                       <Trash2 size={16} /> Delete
@@ -254,7 +257,7 @@ export default function HospitalAdminManagement() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-blue-950/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-              onClick={() => setDeleteConfirm({ show: false, admin: null })}
+              onClick={() => setDeleteConfirm({ show: false, user: null })}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -265,7 +268,7 @@ export default function HospitalAdminManagement() {
               >
                 <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-4 flex items-center gap-3">
                   <Trash2 className="text-white" size={20} />
-                  <h3 className="text-white text-lg font-bold">Delete Hospital Admin</h3>
+                  <h3 className="text-white text-lg font-bold">Delete User</h3>
                 </div>
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-4">
@@ -278,22 +281,22 @@ export default function HospitalAdminManagement() {
                   </div>
 
                   <p className="text-blue-900 mb-6">
-                    Are you sure you want to delete <strong>{deleteConfirm.admin?.name}</strong>?
-                    This will permanently remove their admin access and all associated data.
+                    Are you sure you want to delete <strong>{deleteConfirm.user?.name}</strong>?
+                    This will permanently remove their access and all associated data.
                   </p>
 
                   <div className="flex gap-3 justify-end">
                     <button
-                      onClick={() => setDeleteConfirm({ show: false, admin: null })}
+                      onClick={() => setDeleteConfirm({ show: false, user: null })}
                       className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                     >
                       Cancel
                     </button>
                     <button
-                      onClick={() => handleDelete(deleteConfirm.admin?._id)}
+                      onClick={() => handleDelete(deleteConfirm.user?._id)}
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white bg-gradient-to-r from-red-600 to-rose-500 shadow hover:shadow-md"
                     >
-                      <Trash2 size={16} /> Delete Admin
+                      <Trash2 size={16} /> Delete User
                     </button>
                   </div>
                 </div>
