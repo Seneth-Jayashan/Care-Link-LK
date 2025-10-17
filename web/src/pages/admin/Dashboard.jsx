@@ -27,17 +27,17 @@ export default function HospitalAdminManagement() {
     totalHospitals: 0,
   });
 
-  const [hospitalAdmins, setHospitalAdmins] = useState([]);
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, admin: null });
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, user: null });
 
-  // Fetch stats and admins
+  // Fetch stats and users
   useEffect(() => {
     fetchDashboardStats();
-    fetchHospitalAdmins();
+    fetchUsers();
   }, []);
 
   // Fetch dashboard statistics
@@ -59,34 +59,34 @@ export default function HospitalAdminManagement() {
     }
   };
 
-  // Fetch hospital admins
-  const fetchHospitalAdmins = async () => {
+  // Fetch all users
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/users?role=hospitaladmin');
-      setHospitalAdmins(res.data);
+      const res = await api.get('/users');
+      setUsersList(res.data);
     } catch (err) {
-      console.error('Failed to fetch hospital admins:', err);
-      setError('Failed to load hospital admins');
+      console.error('Failed to fetch users:', err);
+      setError('Failed to load users');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (adminId) => {
-    navigate(`/admin/edit-hospital-manager/${adminId}`);
+  const handleEdit = (userId) => {
+    navigate(`/admin/edit-hospital-manager/${userId}`);
   };
 
-  const handleDelete = async (adminId) => {
+  const handleDelete = async (userId) => {
     try {
-      await api.delete(`/users/${adminId}`);
-      setMessage('✅ Hospital admin deleted successfully!');
-      fetchHospitalAdmins();
-      setDeleteConfirm({ show: false, admin: null });
+      await api.delete(`/users/${userId}`);
+      setMessage('✅ User deleted successfully!');
+      fetchUsers();
+      setDeleteConfirm({ show: false, user: null });
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Something went wrong';
-      setMessage(`❌ Error deleting admin: ${errorMsg}`);
-      setDeleteConfirm({ show: false, admin: null });
+      setMessage(`❌ Error deleting user: ${errorMsg}`);
+      setDeleteConfirm({ show: false, user: null });
     }
   };
 
@@ -94,11 +94,12 @@ export default function HospitalAdminManagement() {
     navigate('/admin/add-hospital-manager');
   };
 
-  // Filter admins based on search term
-  const filteredAdmins = hospitalAdmins.filter(admin =>
-    admin.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admin.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admin.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter users based on search term
+  const filteredUsers = usersList.filter(u =>
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Access Denied
@@ -130,10 +131,10 @@ export default function HospitalAdminManagement() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-blue-600">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -148,30 +149,30 @@ export default function HospitalAdminManagement() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="min-h-screen p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex justify-between items-center">
+        <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Hospital Admin Management</h1>
-            <p className="text-gray-600 mt-1">Manage all hospital administrators</p>
+            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-700 to-blue-400 bg-clip-text text-transparent tracking-tight">Hospital Admin Management</h1>
+            <p className="text-blue-600 mt-2 text-lg">Manage all hospital administrators</p>
           </div>
           <button
             onClick={handleAdd}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow hover:shadow-md transition"
           >
             <Building2 size={20} /> Add Admin
           </button>
         </div>
 
         {message && (
-          <div className="mb-4 p-4 bg-green-100 border border-green-500 text-green-700 rounded">
+          <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl">
             {message}
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
             {error}
           </div>
         )}
@@ -181,20 +182,20 @@ export default function HospitalAdminManagement() {
           {statCards.map((stat, i) => {
             const Icon = stat.icon;
             return (
-              <div key={i} className="bg-white rounded-lg shadow-md p-6">
+              <div key={i} className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-sm font-semibold text-blue-700">{stat.title}</p>
+                    <p className="text-3xl font-extrabold text-blue-900">{stat.value}</p>
                   </div>
-                  <div className={`p-3 rounded-full ${stat.color}`}>
-                    <Icon className="h-6 w-6 text-white" />
+                  <div className={`p-3 rounded-xl bg-gradient-to-br from-white to-blue-50 border border-blue-200`}>
+                    <Icon className="h-6 w-6 text-blue-600" />
                   </div>
                 </div>
                 <div className="mt-4 flex items-center">
-                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-600 font-medium">{stat.change}</span>
-                  <span className="text-sm text-gray-500 ml-1">from last month</span>
+                  <TrendingUp className="h-4 w-4 text-emerald-600 mr-1" />
+                  <span className="text-sm text-emerald-700 font-semibold">{stat.change}</span>
+                  <span className="text-sm text-blue-600 ml-1">from last month</span>
                 </div>
               </div>
             );
@@ -202,40 +203,42 @@ export default function HospitalAdminManagement() {
         </div>
 
         {/* Search & Table */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-6">
           <input
             type="text"
-            placeholder="Search hospital admins..."
+            placeholder="Search users..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full mb-4 p-2 border rounded-lg"
+            className="w-full mb-4 p-2 rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <table className="w-full border-collapse">
-            <thead className="bg-gray-200">
+            <thead className="bg-blue-50">
               <tr>
                 <th className="p-3 text-left">Name</th>
                 <th className="p-3 text-left">Email</th>
                 <th className="p-3 text-left">Phone</th>
+                <th className="p-3 text-left">Role</th>
                 <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredAdmins.map(admin => (
-                <tr key={admin._id} className="border-t">
-                  <td className="p-3">{admin.name}</td>
-                  <td className="p-3">{admin.email}</td>
-                  <td className="p-3">{admin.phone}</td>
+              {filteredUsers.map(u => (
+                <tr key={u._id} className="border-t">
+                  <td className="p-3">{u.name}</td>
+                  <td className="p-3">{u.email}</td>
+                  <td className="p-3">{u.phone}</td>
+                  <td className="p-3 capitalize">{u.role}</td>
                   <td className="p-3 flex gap-2">
                     <button
-                      onClick={() => handleEdit(admin._id)}
-                      className="px-3 py-1 bg-yellow-400 text-white rounded-xl flex items-center gap-1"
+                      onClick={() => handleEdit(u._id)}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-400 shadow hover:shadow-md"
                     >
                       <Edit size={16} /> Edit
                     </button>
                     <button
-                      onClick={() => setDeleteConfirm({ show: true, admin })}
-                      className="px-3 py-1 bg-red-500 text-white rounded-xl flex items-center gap-1"
+                      onClick={() => setDeleteConfirm({ show: true, user: u })}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-white bg-gradient-to-r from-red-600 to-rose-500 shadow hover:shadow-md"
                     >
                       <Trash2 size={16} /> Delete
                     </button>
@@ -253,44 +256,49 @@ export default function HospitalAdminManagement() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-              onClick={() => setDeleteConfirm({ show: false, admin: null })}
+              className="fixed inset-0 bg-blue-950/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              onClick={() => setDeleteConfirm({ show: false, user: null })}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-6 max-w-md w-full"
+                className="bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden max-w-md w-full"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <Trash2 className="text-red-600" size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Delete Hospital Admin</h3>
-                    <p className="text-sm text-gray-500">This action cannot be undone</p>
-                  </div>
+                <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-4 flex items-center gap-3">
+                  <Trash2 className="text-white" size={20} />
+                  <h3 className="text-white text-lg font-bold">Delete User</h3>
                 </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                      <Trash2 className="text-red-600" size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-700">This action cannot be undone</p>
+                    </div>
+                  </div>
 
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete <strong>{deleteConfirm.admin?.name}</strong>?
-                  This will permanently remove their admin access and all associated data.
-                </p>
+                  <p className="text-blue-900 mb-6">
+                    Are you sure you want to delete <strong>{deleteConfirm.user?.name}</strong>?
+                    This will permanently remove their access and all associated data.
+                  </p>
 
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => setDeleteConfirm({ show: false, admin: null })}
-                    className="px-4 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleDelete(deleteConfirm.admin?._id)}
-                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition flex items-center gap-2"
-                  >
-                    <Trash2 size={16} /> Delete Admin
-                  </button>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => setDeleteConfirm({ show: false, user: null })}
+                      className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleDelete(deleteConfirm.user?._id)}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white bg-gradient-to-r from-red-600 to-rose-500 shadow hover:shadow-md"
+                    >
+                      <Trash2 size={16} /> Delete User
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>

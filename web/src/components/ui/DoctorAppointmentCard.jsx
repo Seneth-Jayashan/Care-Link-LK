@@ -66,7 +66,11 @@ const DoctorAppointmentCard = ({ appointment, onStatusChange, isUpdating }) => {
           <button
             onClick={() => handleStatusUpdate('completed')}
             disabled={isUpdating}
-            className="px-3 py-1.5 text-sm font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 transition disabled:bg-gray-300 flex items-center gap-1.5"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-white rounded-md shadow-sm transition ${
+              isUpdating
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow hover:shadow-md'
+            }`}
           >
             {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             Mark as Completed
@@ -74,7 +78,11 @@ const DoctorAppointmentCard = ({ appointment, onStatusChange, isUpdating }) => {
           <button
             onClick={() => handleStatusUpdate('cancelled')}
             disabled={isUpdating}
-            className="px-3 py-1.5 text-sm font-semibold text-white bg-red-500 rounded-md hover:bg-red-600 transition disabled:bg-gray-300 flex items-center gap-1.5"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-white rounded-md shadow-sm transition ${
+              isUpdating
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-gradient-to-r from-red-600 to-rose-500 hover:shadow-md'
+            }`}
           >
             {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
             Cancel

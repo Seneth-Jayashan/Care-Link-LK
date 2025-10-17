@@ -15,6 +15,10 @@ const PaymentPage = () => {
     const [bookingDetails, setBookingDetails] = useState(location.state?.bookingDetails);
     const coPaymentAmount = location.state?.coPaymentAmount;
     const amountToPay = coPaymentAmount || bookingDetails?.consultationFee;
+    const fallbackDoctorName = bookingDetails?.doctorName || appointment?.doctor?.name || 'Doctor';
+    const fallbackSpecialty = bookingDetails?.specialty || appointment?.doctor?.doctorDetails?.specialty || 'General';
+    const fallbackDate = bookingDetails?.selectedSlot?.day || (appointment?.appointmentDate ? new Date(appointment.appointmentDate).toLocaleDateString() : '-');
+    const fallbackTime = bookingDetails?.selectedSlot?.startTime || appointment?.appointmentTime || '';
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [cardInfo, setCardInfo] = useState({ number: '', expiry: '', cvc: '', name: '' });
@@ -39,8 +43,8 @@ const PaymentPage = () => {
             const paymentData = {
                 patient: user.id, 
                 appointment: appointment._id, 
-                doctor: bookingDetails.doctorId, 
-                hospital: bookingDetails.hospitalId,
+                doctor: bookingDetails?.doctorId || appointment?.doctor?._id, 
+                hospital: bookingDetails?.hospitalId || appointment?.hospital?._id,
                 amount: amountToPay,
                 paymentType: 'card',
                 status: 'paid',
@@ -90,7 +94,7 @@ const PaymentPage = () => {
                             Secure Payment
                         </h1>
                     </div>
-                    <p className="text-blue-600 mt-2">Complete your payment for Dr. {bookingDetails.doctorName}</p>
+                    <p className="text-blue-600 mt-2">Complete your payment for Dr. {fallbackDoctorName}</p>
                 </div>
 
                 <div className="p-8 space-y-8">
@@ -109,7 +113,7 @@ const PaymentPage = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-blue-600 font-semibold">Doctor</p>
-                                        <p className="text-lg font-bold text-blue-900">Dr. {bookingDetails.doctorName}</p>
+                                        <p className="text-lg font-bold text-blue-900">Dr. {fallbackDoctorName}</p>
                                     </div>
                                 </div>
 
@@ -119,7 +123,7 @@ const PaymentPage = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-blue-600 font-semibold">Specialty</p>
-                                        <p className="text-lg font-bold text-blue-900">{bookingDetails.specialty}</p>
+                                        <p className="text-lg font-bold text-blue-900">{fallbackSpecialty}</p>
                                     </div>
                                 </div>
                             </div>
@@ -131,9 +135,7 @@ const PaymentPage = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-blue-600 font-semibold">Date & Time</p>
-                                        <p className="text-lg font-bold text-blue-900">
-                                            {bookingDetails.selectedSlot.day} • {bookingDetails.selectedSlot.startTime}
-                                        </p>
+                                        <p className="text-lg font-bold text-blue-900">{fallbackDate}{fallbackTime ? ` • ${fallbackTime}` : ''}</p>
                                     </div>
                                 </div>
 

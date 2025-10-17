@@ -140,6 +140,7 @@ export default function HospitalManagement() {
 
     const [formData, setFormData] = useState(initialFormData);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const navigate = useNavigate();
 
     // --- UTILS & API LOGIC (NO CHANGES BELOW) ---
     const resetFormData = () => setFormData(initialFormData);
@@ -192,13 +193,23 @@ export default function HospitalManagement() {
 
         try {
             await api.delete(`/hospitals/${hospital._id}`);
-            showMessage(`Hospital "${hospital.name}" deleted successfully!`);
+            await Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: `Hospital "${hospital.name}" was deleted successfully.`,
+                timer: 2000,
+                showConfirmButton: false,
+            });
             setHospital(null);
             setActiveTab("add");
             resetFormData();
         } catch (err) {
             const errorMsg = err.response?.data?.message || "Something went wrong";
-            showMessage(`Error deleting hospital: ${errorMsg}`, "error");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Deletion Failed',
+                text: errorMsg,
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -215,23 +226,13 @@ export default function HospitalManagement() {
             facilities: hospital.facilities?.length ? hospital.facilities : initialFormData.facilities,
         });
         setIsEditing(true);
-        const res = await api.get(`/hospitals/${hospitalId}`);
-        setHospital(res.data);
-        setActiveTab("view");
-      } catch (err) {
-        console.error(err);
-        Swal.fire({ // 👈 Use Swal for error feedback
-            icon: 'error',
-            title: 'Loading Failed',
-            text: 'Could not load hospital data. Please try again.'
-        });
         setActiveTab("add");
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name.includes(".")) {
-            const [section, key] = name.split(".");
+        if (name.includes('.')) {
+            const [section, key] = name.split('.');
             setFormData((prev) => ({
                 ...prev,
                 [section]: { ...prev[section], [key]: value },
@@ -249,7 +250,7 @@ export default function HospitalManagement() {
     const addDepartment = () =>
         setFormData((prev) => ({
             ...prev,
-            departments: [...prev.departments, { name: "", description: "" }],
+            departments: [...prev.departments, { name: '', description: '' }],
         }));
     const removeDepartment = (index) =>
         setFormData((prev) => ({
@@ -263,7 +264,7 @@ export default function HospitalManagement() {
         setFormData((prev) => ({ ...prev, facilities: updated }));
     };
     const addFacility = () =>
-        setFormData((prev) => ({ ...prev, facilities: [...prev.facilities, ""] }));
+        setFormData((prev) => ({ ...prev, facilities: [...prev.facilities, ''] }));
     const removeFacility = (index) =>
         setFormData((prev) => ({
             ...prev,
@@ -278,243 +279,96 @@ export default function HospitalManagement() {
             if (isEditing) {
                 const res = await api.put(`/hospitals/${hospital._id}`, formData);
                 setHospital(res.data);
-                showMessage("Hospital updated successfully!");
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Hospital details updated successfully.',
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
+                setIsEditing(false);
+                setActiveTab('view');
             } else {
-                const res = await api.post("/hospitals", formData);
+                const res = await api.post('/hospitals', formData);
                 setHospital(res.data);
-                showMessage("Hospital created successfully!");
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Created!',
+                    text: 'Hospital created successfully!',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+                navigate('/hospital');
             }
-            setIsEditing(false);
-            setActiveTab("view");
         } catch (err) {
-            const errorMsg = err.response?.data?.message || "Something went wrong";
-            showMessage(`Error: ${errorMsg}`, "error");
+            const errorMsg = err.response?.data?.message || 'Something went wrong';
+            await Swal.fire({
+                icon: 'error',
+                title: 'Submission Error',
+                text: errorMsg,
+            });
         } finally {
             setIsSubmitting(false);
         }
     };
-    // -------------------------------------------------------------------
 
-    // --- UI RENDER (The main changes are here) ---
     const renderViewContent = () => (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
             <SectionHeader icon={Building} title={hospital.name} subtitle={`Code: ${hospital.code}`} />
 
-            {/* Information Grid with clean backgrounds and shadows */}
             <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white p-5 rounded-xl shadow-sm border border-blue-50">
-                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><MapPin size={16} className="text-blue-500" /> Address</h4>
-                    <p className="text-gray-700">{hospital.address.street}, {hospital.address.city}, {hospital.address.district}</p>
-                    <p className="text-gray-700">{hospital.address.province}, {hospital.address.country}</p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><MapPin size={16}/> Address</h4>
+                    <p className="text-gray-600">{hospital.address.street}, {hospital.address.city}, {hospital.address.district}</p>
+                    <p className="text-gray-600">{hospital.address.province}, {hospital.address.country}</p>
                 </div>
-                <div className="bg-white p-5 rounded-xl shadow-sm border border-blue-50">
-                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Phone size={16} className="text-blue-500" /> Contact</h4>
-                    <p className="text-gray-700">Phone: {hospital.contact.phone}</p>
-                    <p className="text-gray-700">Email: {hospital.contact.email}</p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><Phone size={16}/> Contact</h4>
+                    <p className="text-gray-600">Phone: {hospital.contact.phone}</p>
+                    <p className="text-gray-600">Email: {hospital.contact.email}</p>
                 </div>
-                <div className="bg-white p-5 rounded-xl shadow-sm border border-blue-50">
-                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Users size={16} className="text-blue-500" /> Capacity</h4>
-                    <p className="text-gray-700 text-lg font-bold">{hospital.bedCapacity} Beds</p>
+
+                <div>
+                    <h4 className="font-semibold text-blue-800 mb-3 text-xl flex items-center gap-2 border-b pb-2"><HeartPulse size={20} className="text-blue-500" /> Departments</h4>
+                    <div className="flex flex-wrap gap-3">
+                        {hospital.departments?.map((dept, i) => (
+                            <div key={i} className="px-4 py-2 bg-blue-100 text-blue-800 font-medium rounded-full shadow-inner transition hover:bg-blue-200">{dept.name}</div>
+                        ))}
+                    </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl shadow-sm border border-blue-50">
-                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Star size={16} className="text-yellow-500" /> Rating</h4>
-                    <p className="text-gray-700 text-lg font-bold">{hospital.rating || "N/A"} / 5</p>
+
+                <div>
+                    <h4 className="font-semibold text-blue-800 mb-3 text-xl flex items-center gap-2 border-b pb-2"><Sparkles size={20} className="text-yellow-500" /> Facilities</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {hospital.facilities?.map((facility, i) => (
+                            <div key={i} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm transition hover:bg-green-200">{facility}</div>
+                        ))}
+                    </div>
                 </div>
-    fetchHospital();
-  }, [user.id]); // Added user.id to dependency array for correctness
 
-
-  // ------------------- DELETE -------------------
-  const handleDeleteConfirm = () => setIsDeleting(true);
-
-  const deleteHospitalApi = async () => {
-    if (!hospital) return;
-    setIsSubmitting(true);
-    setIsDeleting(false);
-
-    try {
-      await api.delete(`/hospitals/${hospital._id}`);
-      await Swal.fire({ // 👈 Use Swal for success feedback
-        icon: 'success',
-        title: 'Deleted!',
-        text: `Hospital "${hospital.name}" was deleted successfully.`,
-        timer: 2000,
-        showConfirmButton: false
-      });
-      setHospital(null);
-      setActiveTab("add");
-      resetFormData();
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || "Something went wrong";
-      Swal.fire({ // 👈 Use Swal for error feedback
-        icon: 'error',
-        title: 'Deletion Failed',
-        text: errorMsg,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ------------------- EDIT -------------------
-  const startEdit = () => {
-    if (!hospital) return;
-    setFormData({
-      ...initialFormData,
-      ...hospital,
-      address: hospital.address || initialFormData.address,
-      contact: hospital.contact || initialFormData.contact,
-      departments: hospital.departments?.length ? hospital.departments : initialFormData.departments,
-      facilities: hospital.facilities?.length ? hospital.facilities : initialFormData.facilities,
-    });
-    setIsEditing(true);
-    setActiveTab("add");
-  };
-
-  // ------------------- FORM HANDLERS -------------------
-  // (No changes to form handlers: handleChange, department, and facility handlers)
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name.includes(".")) {
-      const [section, key] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [section]: { ...prev[section], [key]: value },
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleDepartmentChange = (index, field, value) => {
-    const updated = [...formData.departments];
-    updated[index][field] = value;
-    setFormData((prev) => ({ ...prev, departments: updated }));
-  };
-  const addDepartment = () =>
-    setFormData((prev) => ({
-      ...prev,
-      departments: [...prev.departments, { name: "", description: "" }],
-    }));
-  const removeDepartment = (index) =>
-    setFormData((prev) => ({
-      ...prev,
-      departments: prev.departments.filter((_, i) => i !== index),
-    }));
-
-  const handleFacilityChange = (index, value) => {
-    const updated = [...formData.facilities];
-    updated[index] = value;
-    setFormData((prev) => ({ ...prev, facilities: updated }));
-  };
-  const addFacility = () =>
-    setFormData((prev) => ({ ...prev, facilities: [...prev.facilities, ""] }));
-  const removeFacility = (index) =>
-    setFormData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.filter((_, i) => i !== index),
-    }));
-
-  // ------------------- SUBMIT -------------------
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      if (isEditing) {
-        const res = await api.put(`/hospitals/${hospital._id}`, formData);
-        setHospital(res.data);
-        Swal.fire({ // 👈 Use Swal for update success
-          icon: 'success',
-          title: 'Updated!',
-          text: 'Hospital details updated successfully.',
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        setIsEditing(false);
-        setActiveTab("view");
-      } else {
-        const res = await api.post("/hospitals", formData);
-        setHospital(res.data);
-        await Swal.fire({ // 👈 Use Swal for creation success
-          icon: 'success',
-          title: 'Created!',
-          text: 'Hospital created successfully!',
-          timer: 1500, // Shorter timer before redirect
-          showConfirmButton: false,
-        });
-        navigate("/hospital"); // 👈 REDIRECT on success
-      }
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || "Something went wrong";
-      Swal.fire({ // 👈 Use Swal for submission errors
-        icon: 'error',
-        title: 'Submission Error',
-        text: errorMsg,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ------------------- UI RENDER -------------------
-  // (No changes to render functions: renderViewContent, renderFormComponent)
-  const renderViewContent = () => (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-        <SectionHeader icon={Building} title={hospital.name} subtitle={`Code: ${hospital.code}`} />
-
-        <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><MapPin size={16}/> Address</h4>
-                <p className="text-gray-600">{hospital.address.street}, {hospital.address.city}, {hospital.address.district}</p>
-                <p className="text-gray-600">{hospital.address.province}, {hospital.address.country}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><Phone size={16}/> Contact</h4>
-                <p className="text-gray-600">Phone: {hospital.contact.phone}</p>
-                <p className="text-gray-600">Email: {hospital.contact.email}</p>
-            </div>
-
-            {/* Departments */}
-            <div>
-                <h4 className="font-semibold text-blue-800 mb-3 text-xl flex items-center gap-2 border-b pb-2"><HeartPulse size={20} className="text-blue-500" /> Departments</h4>
-                <div className="flex flex-wrap gap-3">
-                    {hospital.departments?.map((dept, i) => <div key={i} className="px-4 py-2 bg-blue-100 text-blue-800 font-medium rounded-full shadow-inner transition hover:bg-blue-200">{dept.name}</div>)}
+                <div className="pt-4 border-t border-gray-100">
+                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><FileText size={16} className="text-blue-500" /> Notes</h4>
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <p className="text-gray-600 italic">{hospital.notes || 'No additional notes.'}</p>
+                    </div>
                 </div>
-            </div>
 
-            {/* Facilities */}
-            <div>
-                <h4 className="font-semibold text-blue-800 mb-3 text-xl flex items-center gap-2 border-b pb-2"><Sparkles size={20} className="text-yellow-500" /> Facilities</h4>
-                <div className="flex flex-wrap gap-2">
-                    {hospital.facilities?.map((facility, i) => <div key={i} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm transition hover:bg-green-200">{facility}</div>)}
+                <div className="flex items-center justify-between mt-8">
+                    <motion.button
+                        onClick={startEdit}
+                        whileHover={{ scale: 1.05 }}
+                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2"
+                    >
+                        <Edit2 size={16} /> Edit Details
+                    </motion.button>
+                    <motion.button
+                        onClick={handleDeleteConfirm}
+                        whileHover={{ scale: 1.05 }}
+                        className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition flex items-center gap-2"
+                    >
+                        <Trash2 size={16} /> Delete Hospital
+                    </motion.button>
                 </div>
-            </div>
-
-            {/* Notes */}
-            <div className="pt-4 border-t border-gray-100">
-                <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><FileText size={16} className="text-blue-500" /> Notes</h4>
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                    <p className="text-gray-600 italic">{hospital.notes || "No additional notes."}</p>
-                </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between  mt-8">
-                <motion.button 
-                    onClick={startEdit} 
-                    whileHover={{ scale: 1.05 }} 
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2"
-                >
-                    <Edit2 size={16} /> Edit Details
-                </motion.button>
-                <motion.button 
-                    onClick={handleDeleteConfirm} 
-                    whileHover={{ scale: 1.05 }} 
-                    className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition flex items-center gap-2"
-                >
-                    <Trash2 size={16} /> Delete Hospital
-                </motion.button>
             </div>
         </motion.div>
     );
@@ -668,38 +522,13 @@ export default function HospitalManagement() {
                             <Loader2 className="animate-spin text-blue-600" size={32} />
                             <span className="text-xl text-gray-600 font-medium">Loading Hospital Data...</span>
                         </div>
-                    ) : activeTab === "view" && hospital ? (
+                    ) : activeTab === 'view' && hospital ? (
                         renderViewContent()
                     ) : (
                         renderFormComponent()
                     )}
                 </div>
             </motion.div>
-          </div>
-          <div className="flex bg-white/20 rounded-xl p-1">
-            <TabButton
-              id="view"
-              label="Details"
-              icon={List}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              disabled={!hospital}
-            />
-            {!hospital && (
-              <TabButton
-                id="add"
-                label="Add"
-                icon={Plus}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                onClick={() => resetFormData()}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* --- Message Bar Removed --- */}
-        {/* The old message bar is no longer needed as Swal handles notifications */}
 
             <ConfirmationDialog
                 isOpen={isDeleting}

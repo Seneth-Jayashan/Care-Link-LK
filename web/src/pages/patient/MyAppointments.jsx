@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../../api/api';
 import AppointmentCard from '../../components/ui/AppointmentCard'; // Adjust path if needed
-import { Calendar, History, Loader2, AlertCircle, Pencil, XCircle } from 'lucide-react';
+import { Calendar, History, Loader2, AlertCircle, Pencil, XCircle, Clock, User, Wallet, ShieldCheck, CreditCard, Building, Stethoscope } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MyAppointments = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,6 +46,18 @@ const MyAppointments = () => {
 
     fetchAppointments();
   }, []);
+
+  // When navigated with a hash (e.g., /patient/appointments#<id>), scroll to that appointment
+  useEffect(() => {
+    if (!location.hash || appointments.length === 0) return;
+    const id = location.hash.replace('#', '');
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.classList.add('ring-2', 'ring-blue-500', 'rounded-xl');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'rounded-xl'), 2000);
+    }
+  }, [location.hash, appointments]);
 
   const { upcomingAppointments, pastAppointments } = useMemo(() => {
     const now = new Date();
@@ -198,21 +212,21 @@ const MyAppointments = () => {
           {upcomingAppointments.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {upcomingAppointments.map(app => (
-                <div key={app._id} className="space-y-3">
+                <div key={app._id} id={app._id} className="space-y-3">
                   <AppointmentCard appointment={app} />
                   <div className="flex gap-3">
                     {app.status === 'pending' && (
                       <button
                         onClick={() => openPaymentModal(app)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-md hover:shadow-lg transition"
                       >
-                        Confirm & Pay
+                        <Wallet size={16}/> Confirm & Pay
                       </button>
                     )}
                     {app.status !== 'cancelled' && (
                       <button
                         onClick={() => openEditModal(app)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-md hover:shadow-lg transition"
                       >
                         <Pencil size={16} /> Edit
                       </button>
@@ -220,7 +234,7 @@ const MyAppointments = () => {
                     {app.status !== 'cancelled' && (
                       <button
                         onClick={() => cancelAppointment(app._id)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-red-600 to-rose-500 text-white shadow-md hover:shadow-lg transition"
                       >
                         <XCircle size={16} /> Cancel
                       </button>
@@ -285,91 +299,163 @@ const MyAppointments = () => {
       </div>
 
       {editModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Edit Appointment</h3>
-            <form onSubmit={submitEdit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                <input
-                  type="date"
-                  name="appointmentDate"
-                  value={formValues.appointmentDate}
-                  onChange={handleFormChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Time Slot</label>
-                {editingAppointment?.doctor?.doctorDetails?.schedule?.length > 0 ? (
-                  <select
-                    name="appointmentTime"
-                    value={formValues.appointmentTime}
-                    onChange={handleFormChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="" disabled>Select a time slot</option>
-                    {editingAppointment.doctor.doctorDetails.schedule.map((slot) => (
-                      <option key={slot._id || `${slot.day}-${slot.startTime}`} value={slot.startTime}>
-                        {slot.day}: {slot.startTime} - {slot.endTime}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                    No available time slots for this doctor.
+        <div className="fixed inset-0 bg-blue-950/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-4 flex items-center gap-3">
+              <Pencil className="text-white" size={20} />
+              <h3 className="text-white text-lg font-bold">Edit Appointment</h3>
+            </div>
+            <div className="p-6">
+              <form onSubmit={submitEdit} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-blue-900 mb-1">Date</label>
+                    <input
+                      type="date"
+                      name="appointmentDate"
+                      value={formValues.appointmentDate}
+                      onChange={handleFormChange}
+                      className="w-full rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 px-3 py-2 text-blue-900 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
-                <input
-                  type="text"
-                  name="reason"
-                  value={formValues.reason}
-                  onChange={handleFormChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Describe reason"
-                />
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={closeEditModal} className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button
-                  type="submit"
-                  disabled={!editingAppointment?.doctor?.doctorDetails?.schedule?.length}
-                  className={`px-4 py-2 rounded-md text-white ${editingAppointment?.doctor?.doctorDetails?.schedule?.length ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-                >
-                  Save changes
-                </button>
-              </div>
-            </form>
+                  <div>
+                    <label className="block text-sm font-semibold text-blue-900 mb-1">Time Slot</label>
+                    {editingAppointment?.doctor?.doctorDetails?.schedule?.length > 0 ? (
+                      <select
+                        name="appointmentTime"
+                        value={formValues.appointmentTime}
+                        onChange={handleFormChange}
+                        className="w-full rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="" disabled>
+                          Select a time slot
+                        </option>
+                        {editingAppointment.doctor.doctorDetails.schedule.map((slot) => (
+                          <option key={slot._id || `${slot.day}-${slot.startTime}`} value={slot.startTime}>
+                            {slot.day}: {slot.startTime} - {slot.endTime}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
+                        No available time slots for this doctor.
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-blue-900 mb-1">Reason (optional)</label>
+                  <input
+                    type="text"
+                    name="reason"
+                    value={formValues.reason}
+                    onChange={handleFormChange}
+                    className="w-full rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 px-3 py-2 text-blue-900 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Describe reason"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={closeEditModal}
+                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!editingAppointment?.doctor?.doctorDetails?.schedule?.length}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-white shadow-md transition ${
+                      editingAppointment?.doctor?.doctorDetails?.schedule?.length
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-400 hover:shadow-lg'
+                        : 'bg-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Save changes
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
       {paymentModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Confirm & Start Payment</h3>
-            <p className="text-gray-600 mb-4">Choose a payment method to continue.</p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => restartPayment('card')}
-                className="flex-1 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Pay by Card
-              </button>
-              <button
-                onClick={() => restartPayment('insurance')}
-                className="flex-1 px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
-              >
-                Use Insurance
-              </button>
+        <div className="fixed inset-0 bg-blue-950/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-4 flex items-center gap-3">
+              <Wallet className="text-white" size={22} />
+              <h3 className="text-white text-lg font-bold">Confirm & Start Payment</h3>
             </div>
-            <div className="flex justify-end mt-4">
-              <button onClick={closePaymentModal} className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">Close</button>
+            <div className="p-6 space-y-6">
+              {paymentAppointment && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 border border-blue-100 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg border border-blue-100"><User className="text-blue-600" size={18}/></div>
+                    <div>
+                      <p className="text-sm text-blue-600 font-semibold">Doctor</p>
+                      <p className="text-blue-900 font-bold">Dr. {paymentAppointment.doctor?.name || 'Unknown'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg border border-blue-100"><Calendar className="text-blue-600" size={18}/></div>
+                    <div>
+                      <p className="text-sm text-blue-600 font-semibold">Date & Time</p>
+                      <p className="text-blue-900 font-bold">{paymentAppointment.appointmentDate?.split('T')[0]} • {paymentAppointment.appointmentTime}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg border border-blue-100"><Building className="text-blue-600" size={18}/></div>
+                    <div>
+                      <p className="text-sm text-blue-600 font-semibold">Hospital</p>
+                      <p className="text-blue-900 font-bold">{paymentAppointment.hospital?.name || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg border border-blue-100"><Stethoscope className="text-blue-600" size={18}/></div>
+                    <div>
+                      <p className="text-sm text-blue-600 font-semibold">Consultation Fee</p>
+                      <p className="text-blue-900 font-bold">LKR {paymentAppointment?.doctor?.doctorDetails?.consultationFee?.toLocaleString?.() || '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-gray-600">Choose a payment method to continue.</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => restartPayment('card')}
+                  className="group w-full rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 p-5 text-left shadow-sm hover:shadow-md transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-blue-100 text-blue-700"><CreditCard size={20}/></div>
+                    <div>
+                      <p className="font-semibold text-blue-900">Pay by Card</p>
+                      <p className="text-sm text-blue-600">Secure checkout with instant confirmation</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => restartPayment('insurance')}
+                  className="group w-full rounded-xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50 p-5 text-left shadow-sm hover:shadow-md transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-emerald-100 text-emerald-700"><ShieldCheck size={20}/></div>
+                    <div>
+                      <p className="font-semibold text-emerald-900">Use Insurance</p>
+                      <p className="text-sm text-emerald-600">Verify coverage or complete co-payment</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex justify-end">
+                <button onClick={closePaymentModal} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Close</button>
+              </div>
             </div>
           </div>
         </div>

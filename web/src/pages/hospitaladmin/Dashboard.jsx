@@ -64,18 +64,16 @@ export default function Dashboard() {
   useEffect(() => {
     fetchStats();
 
-    // Optional: auto-refresh every 30 seconds to reflect real-time DB updates
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
+    return () => {};
   }, []);
 
   const StatCard = ({ icon: Icon, label, value, subText, colorFrom, colorTo }) => (
     <div
-      className={`bg-gradient-to-r ${colorFrom} ${colorTo} p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform duration-300`}
+      className={`bg-gradient-to-r ${colorFrom} ${colorTo} p-4 rounded-2xl shadow-lg flex flex-col items-center justify-center gap-1 hover:scale-105 transition-transform duration-300`}
     >
       <Icon className="text-white" size={36} />
-      <h2 className="text-white text-xl font-semibold">{label}</h2>
-      <p className="text-white text-3xl font-bold">{value}</p>
+      <h2 className="text-white text-lg font-semibold">{label}</h2>
+      <p className="text-white text-2xl font-bold">{value}</p>
       {subText && <p className="text-white text-sm opacity-90 -mt-1">{subText}</p>}
     </div>
   );

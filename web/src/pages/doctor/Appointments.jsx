@@ -67,37 +67,62 @@ const Appointments = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="animate-spin text-blue-500 mx-auto" size={48} />
+          <p className="text-blue-600 mt-4 text-lg">Loading your appointments...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-10 px-4 bg-red-50 rounded-lg">
-        <AlertCircle className="mx-auto text-red-500" size={48} />
-        <h3 className="mt-4 text-xl font-semibold text-red-800">{error}</h3>
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-100 p-8 max-w-md w-full">
+          <AlertCircle className="mx-auto text-red-500" size={64} />
+          <h3 className="mt-6 text-2xl font-bold text-red-800">An Error Occurred</h3>
+          <p className="text-red-600 mt-4 text-lg">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-3 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
+    <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">My Patient Appointments</h1>
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-700 to-blue-400 bg-clip-text text-transparent tracking-tight">
+            My Patient Appointments
+          </h1>
+          <p className="text-blue-600 mt-2 text-lg">Manage upcoming and past appointments</p>
+        </div>
 
         {/* View Mode Tabs */}
-        <div className="flex border-b border-gray-200 mb-6">
+        <div className="mb-6 inline-flex rounded-full border border-blue-200 bg-white/70 backdrop-blur px-1 py-1 shadow-sm">
           <button
             onClick={() => setViewMode('upcoming')}
-            className={`px-6 py-3 text-lg font-semibold transition ${viewMode === 'upcoming' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-5 py-2.5 text-sm md:text-base font-semibold rounded-full transition ${
+              viewMode === 'upcoming'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow'
+                : 'text-blue-700 hover:bg-blue-50'
+            }`}
           >
             Upcoming ({upcomingAppointments.length})
           </button>
           <button
             onClick={() => setViewMode('past')}
-            className={`px-6 py-3 text-lg font-semibold transition ${viewMode === 'past' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-5 py-2.5 text-sm md:text-base font-semibold rounded-full transition ${
+              viewMode === 'past'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow'
+                : 'text-blue-700 hover:bg-blue-50'
+            }`}
           >
             Past & Completed ({pastAppointments.length})
           </button>
@@ -116,14 +141,16 @@ const Appointments = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-8 text-center">
             <div className="flex justify-center">
-              {viewMode === 'upcoming' ? <Calendar size={56} className="text-gray-300"/> : <History size={56} className="text-gray-300"/>}
+              {viewMode === 'upcoming' ? (
+                <Calendar size={64} className="text-blue-400" />
+              ) : (
+                <History size={64} className="text-blue-400" />
+              )}
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-gray-700">
-              No {viewMode} appointments
-            </h3>
-            <p className="mt-1 text-gray-500">You have no {viewMode} appointments in your schedule.</p>
+            <h3 className="mt-4 text-xl font-bold text-blue-900">No {viewMode} appointments</h3>
+            <p className="mt-1 text-blue-600">You have no {viewMode} appointments in your schedule.</p>
           </div>
         )}
       </div>
