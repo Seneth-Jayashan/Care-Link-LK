@@ -1,3 +1,4 @@
+// PatientManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -6,12 +7,9 @@ import {
 } from 'lucide-react';
 import api from "../../api/api";
 
-// Reusable Input Component for Forms
 const InputGroup = ({ label, name, value, onChange, error, icon: Icon, type = 'text', ...props }) => (
   <div>
-    <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
-      {label}
-    </label>
+    <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
     <div className="relative">
       {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />}
       <input
@@ -28,32 +26,32 @@ const InputGroup = ({ label, name, value, onChange, error, icon: Icon, type = 't
   </div>
 );
 
-
-// Modal for Viewing and Editing Patient Details
 const PatientDetailModal = ({ modalState, onClose, onSave, fetchPatients }) => {
     const { isOpen, mode, patient } = modalState;
     const [formData, setFormData] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+  console.log('patient: ',patient);
     useEffect(() => {
-        // Pre-fill form when patient data is available
         if (patient) {
             setFormData({
                 name: patient.name || '',
                 email: patient.email || '',
                 phone: patient.phone || '',
-                dateOfBirth: patient.dateOfBirth ? new Date(patient.dateOfBirth).toISOString().split('T')[0] : '',
-                gender: patient.gender || '',
-                bloodGroup: patient.bloodGroup || '',
-                address: patient.address || '',
-                emergencyContact: patient.emergencyContact || '',
-                medicalConditions: patient.medicalConditions || '',
-                allergies: patient.allergies || '',
-                currentMedications: patient.currentMedications || '',
+                dateOfBirth: patient.patientHistory.dateOfBirth ? new Date(patient.patientHistory.dateOfBirth).toISOString().split('T')[0] : '',
+                gender: patient.patientHistory.gender || '',
+                bloodGroup: patient.patientHistory.bloodGroup || '',
+                address: patient.patientHistory.address || '',
+                emergencyContact: patient.patientHistory.emergencyContact || '',
+                chronicDiseases: (patient.patientHistory.chronicDiseases || []).join(', '),
+                pastSurgeries: (patient.patientHistory.pastSurgeries || []).join(', '),
+                familyHistory: (patient.patientHistory.familyHistory || []).join(', '),
+                allergies: (patient.patientHistory.allergies || []).join(', '),
+                medications: (patient.patientHistory.medications || []).map(m => `${m.name} (${m.dosage}, ${m.frequency})`).join(', '),
+                notes: patient.patientHistory.notes || '',
             });
         }
     }, [patient]);
-    
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -62,22 +60,34 @@ const PatientDetailModal = ({ modalState, onClose, onSave, fetchPatients }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+
         try {
-            await onSave(patient._id, formData);
-            fetchPatients(); // Refresh list on successful save
+            // Convert comma-separated strings to arrays for backend
+            const updatedData = {
+                ...formData,
+                chronicDiseases: formData.chronicDiseases?.split(',').map(s => s.trim()).filter(Boolean),
+                pastSurgeries: formData.pastSurgeries?.split(',').map(s => s.trim()).filter(Boolean),
+                familyHistory: formData.familyHistory?.split(',').map(s => s.trim()).filter(Boolean),
+                allergies: formData.allergies?.split(',').map(s => s.trim()).filter(Boolean),
+                medications: formData.medications?.split(',').map(s => {
+                    const match = s.match(/(.+)\s*\((.+),\s*(.+)\)/);
+                    return match ? { name: match[1].trim(), dosage: match[2].trim(), frequency: match[3].trim() } : { name: s.trim() };
+                }),
+            };
+
+            await onSave(patient._id, updatedData);
+            fetchPatients();
             onClose();
         } catch (error) {
             console.error("Failed to update patient:", error);
-            // Optionally, show an error message within the modal
         } finally {
             setIsSubmitting(false);
         }
     };
-    
+
     if (!isOpen) return null;
 
     const isEditMode = mode === 'edit';
-
     const renderField = (label, value) => (
         <div className="py-2">
             <p className="text-sm font-medium text-gray-500">{label}</p>
@@ -104,9 +114,7 @@ const PatientDetailModal = ({ modalState, onClose, onSave, fetchPatients }) => {
                     >
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-gray-800">{isEditMode ? 'Edit Patient Details' : 'Patient Details'}</h2>
-                            <button onClick={onClose} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-                                <X size={20} />
-                            </button>
+                            <button onClick={onClose} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><X size={20} /></button>
                         </div>
 
                         <form onSubmit={handleSubmit}>
@@ -120,36 +128,34 @@ const PatientDetailModal = ({ modalState, onClose, onSave, fetchPatients }) => {
                                         <InputGroup label="Gender" name="gender" value={formData.gender} onChange={handleChange} />
                                         <InputGroup label="Blood Group" name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} />
                                         <InputGroup label="Emergency Contact" name="emergencyContact" type="tel" value={formData.emergencyContact} onChange={handleChange} />
-                                        <div className="md:col-span-2">
-                                          <InputGroup label="Address" name="address" value={formData.address} onChange={handleChange} />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                          <InputGroup label="Medical Conditions" name="medicalConditions" value={formData.medicalConditions} onChange={handleChange} />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                          <InputGroup label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                          <InputGroup label="Current Medications" name="currentMedications" value={formData.currentMedications} onChange={handleChange} />
-                                        </div>
+                                        <div className="md:col-span-2"><InputGroup label="Address" name="address" value={formData.address} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><InputGroup label="Chronic Diseases" name="chronicDiseases" value={formData.chronicDiseases} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><InputGroup label="Past Surgeries" name="pastSurgeries" value={formData.pastSurgeries} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><InputGroup label="Family History" name="familyHistory" value={formData.familyHistory} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><InputGroup label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><InputGroup label="Current Medications" name="medications" value={formData.medications} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><InputGroup label="Notes" name="notes" value={formData.notes} onChange={handleChange} /></div>
                                     </>
                                 ) : (
                                     <>
                                         {renderField('Full Name', patient.name)}
                                         {renderField('Email', patient.email)}
                                         {renderField('Phone', patient.phone)}
-                                        {renderField('Date of Birth', patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : 'N/A')}
-                                        {renderField('Gender', patient.gender)}
-                                        {renderField('Blood Group', patient.bloodGroup)}
-                                        {renderField('Emergency Contact', patient.emergencyContact)}
-                                        <div className="md:col-span-2">{renderField('Address', patient.address)}</div>
-                                        <div className="md:col-span-2">{renderField('Medical Conditions', patient.medicalConditions)}</div>
-                                        <div className="md:col-span-2">{renderField('Allergies', patient.allergies)}</div>
-                                        <div className="md:col-span-2">{renderField('Current Medications', patient.currentMedications)}</div>
+                                        {renderField('Date of Birth', patient.patientHistory.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : 'N/A')}
+                                        {renderField('Gender', patient.patientHistory.gender)}
+                                        {renderField('Blood Group', patient.patientHistory.bloodGroup)}
+                                        {renderField('Emergency Contact', patient.patientHistory.emergencyContact)}
+                                        <div className="md:col-span-2">{renderField('Address', patient.patientHistory.address)}</div>
+                                        <div className="md:col-span-2">{renderField('Chronic Diseases', (patient.patientHistory.chronicDiseases || []).join(', '))}</div>
+                                        <div className="md:col-span-2">{renderField('Past Surgeries', (patient.patientHistory.pastSurgeries || []).join(', '))}</div>
+                                        <div className="md:col-span-2">{renderField('Family History', (patient.patientHistory.familyHistory || []).join(', '))}</div>
+                                        <div className="md:col-span-2">{renderField('Allergies', (patient.patientHistory.allergies || []).join(', '))}</div>
+                                        <div className="md:col-span-2">{renderField('Current Medications', (patient.patientHistory.medications || []).map(m => `${m.name} (${m.dosage}, ${m.frequency})`).join(', '))}</div>
+                                        <div className="md:col-span-2">{renderField('Notes', patient.patientHistory.notes)}</div>
                                     </>
                                 )}
                             </div>
-                            
+
                             {isEditMode && (
                                 <div className="flex justify-end gap-4 mt-8">
                                     <button type="button" onClick={onClose} className="px-6 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition">
@@ -168,24 +174,23 @@ const PatientDetailModal = ({ modalState, onClose, onSave, fetchPatients }) => {
         </AnimatePresence>
     );
 };
-
-
 const PatientManagement = () => {
     const [activeTab, setActiveTab] = useState('view');
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    
-    // Unified modal state
+
+    // Modal and delete state
     const [modalState, setModalState] = useState({ isOpen: false, mode: 'view', patient: null });
     const [deleteConfirm, setDeleteConfirm] = useState({ show: false, patient: null });
 
-    // Form state for adding a new patient
+    // Add patient form state
     const [formData, setFormData] = useState({
         name: '', email: '', password: '', confirmPassword: '', phone: '', profileImage: null,
         dateOfBirth: '', gender: '', bloodGroup: '', address: '', emergencyContact: '',
-        medicalConditions: '', allergies: '', currentMedications: ''
+        chronicDiseases: '', pastSurgeries: '', familyHistory: '', allergies: '',
+        medications: '', notes: ''
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -194,7 +199,7 @@ const PatientManagement = () => {
     const [errors, setErrors] = useState({});
 
     const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-    const genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
+    const genders = ['Male', 'Female', 'Other'];
 
     const fetchPatients = useCallback(async () => {
         try {
@@ -210,56 +215,22 @@ const PatientManagement = () => {
         }
     }, []);
 
+    const handleUpdatePatient = async (patientId, updatedData) => {
+      try {
+          await api.put(`/users/${patientId}`, updatedData);
+          setMessage('✅ Patient details updated successfully!');
+          fetchPatients(); // Refresh the list after update
+      } catch (err) {
+          const errorMsg = err.response?.data?.message || 'Failed to update patient.';
+          setMessage(`❌ ${errorMsg}`);
+          throw err; // Optional: propagate error to modal
+      }
+  };
+
     useEffect(() => {
-        if (activeTab === 'view') {
-            fetchPatients();
-        }
+        if (activeTab === 'view') fetchPatients();
     }, [activeTab, fetchPatients]);
 
-    const handleUpdatePatient = async (patientId, updatedData) => {
-        try {
-            await api.put(`/users/${patientId}`, updatedData);
-            setMessage('✅ Patient details updated successfully!');
-        } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to update patient.';
-            setMessage(`❌ ${errorMsg}`);
-            throw err; // Re-throw to handle in modal
-        }
-    };
-    
-    const handleDeletePatient = async (patientId) => {
-        try {
-            await api.delete(`/users/${patientId}`);
-            setMessage('✅ Patient deleted successfully!');
-            fetchPatients(); // Refresh the list
-        } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to delete patient.';
-            setMessage(`❌ ${errorMsg}`);
-        } finally {
-            setDeleteConfirm({ show: false, patient: null });
-        }
-    };
-    
-    const handleView = async (patient) => {
-        try {
-            const res = await api.get(`/users/${patient._id}`);
-            setModalState({ isOpen: true, mode: 'view', patient: res.data });
-        } catch (err) {
-            console.error(err);
-            setMessage("❌ Failed to load patient details");
-        }
-    };
-
-    const handleEdit = async (patient) => {
-        try {
-            const res = await api.get(`/users/${patient._id}`);
-            setModalState({ isOpen: true, mode: 'edit', patient: res.data });
-        } catch (err) {
-            console.error(err);
-            setMessage("❌ Failed to load patient for editing");
-        }
-    };
-    
     const handleChange = (e) => {
         const { name, value, files } = e.target;
         if (name === 'profileImage') {
@@ -267,9 +238,7 @@ const PatientManagement = () => {
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
-        }
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     const validateForm = () => {
@@ -281,8 +250,7 @@ const PatientManagement = () => {
         else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
         if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return Object.keys(newErrors).length === 0 && (setErrors(newErrors), Object.keys(newErrors).length === 0);
     };
 
     const handleSubmit = async (e) => {
@@ -292,21 +260,40 @@ const PatientManagement = () => {
         setMessage('');
 
         const submitData = new FormData();
-        Object.keys(formData).forEach(key => {
-            if (key !== 'confirmPassword' && formData[key]) {
-                submitData.append(key, formData[key]);
+        // Convert comma-separated fields to arrays
+        const arrayFields = ['chronicDiseases', 'pastSurgeries', 'familyHistory', 'allergies', 'medications'];
+        const formCopy = { ...formData };
+        arrayFields.forEach(field => {
+            if (formCopy[field]) {
+                if (field === 'medications') {
+                    // Expect format: "Name (Dosage, Frequency), ..."
+                    formCopy[field] = formCopy[field].split(',').map(med => {
+                        const match = med.match(/(.+)\s*\((.+),\s*(.+)\)/);
+                        return match ? { name: match[1].trim(), dosage: match[2].trim(), frequency: match[3].trim() } : { name: med.trim() };
+                    });
+                } else {
+                    formCopy[field] = formCopy[field].split(',').map(s => s.trim()).filter(Boolean);
+                }
             }
         });
+
+        Object.keys(formCopy).forEach(key => {
+            if (key !== 'confirmPassword' && formCopy[key] !== undefined) {
+                submitData.append(key, typeof formCopy[key] === 'object' ? JSON.stringify(formCopy[key]) : formCopy[key]);
+            }
+        });
+
         submitData.append('role', 'patient');
-        
+
         try {
-            await api.post('/users', submitData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            await api.post('/users', submitData, { headers: { 'Content-Type': 'multipart/form-data' } });
             setMessage('✅ Patient registered successfully!');
             fetchPatients();
-            // Reset form and switch tab
-            setFormData({ name: '', email: '', password: '', confirmPassword: '', phone: '', profileImage: null, dateOfBirth: '', gender: '', bloodGroup: '', address: '', emergencyContact: '', medicalConditions: '', allergies: '', currentMedications: '' });
+            setFormData({
+                name: '', email: '', password: '', confirmPassword: '', phone: '', profileImage: null,
+                dateOfBirth: '', gender: '', bloodGroup: '', address: '', emergencyContact: '',
+                chronicDiseases: '', pastSurgeries: '', familyHistory: '', allergies: '', medications: '', notes: ''
+            });
             setErrors({});
             setActiveTab('view');
         } catch (error) {
@@ -321,6 +308,28 @@ const PatientManagement = () => {
         patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handleView = (patient) => {
+        setModalState({ isOpen: true, mode: 'view', patient });
+    };
+
+    const handleEdit = (patient) => {
+        setModalState({ isOpen: true, mode: 'edit', patient });
+    };
+
+    const handleDeletePatient = async (patientId) => {
+        try {
+            await api.delete(`/users/${patientId}`);
+            setMessage('✅ Patient deleted successfully!');
+            fetchPatients();
+        } catch (err) {
+            const errorMsg = err.response?.data?.message || 'Failed to delete patient.';
+            setMessage(`❌ ${errorMsg}`);
+        } finally {
+            setDeleteConfirm({ show: false, patient: null });
+        }
+    };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
@@ -453,47 +462,66 @@ const PatientManagement = () => {
                             <motion.div key="add" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }}>
                                 <form onSubmit={handleSubmit} className="space-y-8">
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                    {/* Basic Info */}
                                     <InputGroup label="Full Name *" name="name" value={formData.name} onChange={handleChange} error={errors.name} placeholder="Enter full name" />
                                     <InputGroup label="Email Address *" name="email" type="email" value={formData.email} onChange={handleChange} error={errors.email} placeholder="Enter email" icon={Mail} />
                                     <InputGroup label="Password *" name="password" type={showPassword ? 'text' : 'password'} value={formData.password} onChange={handleChange} error={errors.password} placeholder="Enter password" icon={Lock} />
                                     <InputGroup label="Confirm Password *" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword} placeholder="Confirm password" icon={Lock} />
                                     <InputGroup label="Phone Number *" name="phone" type="tel" value={formData.phone} onChange={handleChange} error={errors.phone} placeholder="Enter phone" icon={Phone} />
                                     <InputGroup label="Profile Image" name="profileImage" type="file" onChange={handleChange} accept="image/*" />
+
+                                    {/* Personal Info */}
                                     <InputGroup label="Date of Birth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} />
                                     <div>
-                                      <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                                       <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl">
                                         <option value="">Select Gender</option>
                                         {genders.map(g => <option key={g} value={g}>{g}</option>)}
                                       </select>
                                     </div>
                                     <div>
-                                      <label htmlFor="bloodGroup" className="block text-sm font-medium text-gray-700 mb-2">Blood Group</label>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">Blood Group</label>
                                       <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl">
                                         <option value="">Select Blood Group</option>
                                         {bloodGroups.map(bg => <option key={bg} value={bg}>{bg}</option>)}
                                       </select>
                                     </div>
+
+                                    {/* Contact Info */}
                                     <InputGroup label="Emergency Contact" name="emergencyContact" type="tel" value={formData.emergencyContact} onChange={handleChange} placeholder="Emergency contact" icon={Phone} />
                                     <div className="md:col-span-2">
-                                        <InputGroup label="Address" name="address" value={formData.address} onChange={handleChange} placeholder="Enter complete address" />
+                                      <InputGroup label="Address" name="address" value={formData.address} onChange={handleChange} placeholder="Enter complete address" />
+                                    </div>
+
+                                    {/* Medical History */}
+                                    <div className="md:col-span-2">
+                                      <InputGroup label="Chronic Diseases" name="chronicDiseases" value={formData.chronicDiseases} onChange={handleChange} placeholder="e.g., Diabetes, Hypertension" />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <InputGroup label="Medical Conditions" name="medicalConditions" value={formData.medicalConditions} onChange={handleChange} placeholder="e.g., Diabetes, Hypertension" />
+                                      <InputGroup label="Past Surgeries" name="pastSurgeries" value={formData.pastSurgeries} onChange={handleChange} placeholder="e.g., Appendectomy, Heart Bypass" />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <InputGroup label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="e.g., Penicillin, Peanuts" />
+                                      <InputGroup label="Family History" name="familyHistory" value={formData.familyHistory} onChange={handleChange} placeholder="e.g., Heart Disease, Cancer" />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <InputGroup label="Current Medications" name="currentMedications" value={formData.currentMedications} onChange={handleChange} placeholder="e.g., Metformin 500mg" />
+                                      <InputGroup label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="e.g., Penicillin, Peanuts" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                      <InputGroup label="Current Medications" name="medications" value={formData.medications} onChange={handleChange} placeholder="e.g., Metformin 500mg, Paracetamol" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                      <InputGroup label="Additional Notes" name="notes" value={formData.notes} onChange={handleChange} placeholder="Other relevant health information" />
                                     </div>
                                   </div>
+
                                   <div className="flex justify-center pt-6">
                                     <button type="submit" disabled={isSubmitting} className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2 shadow-lg">
-                                        {isSubmitting ? (<><Loader2 className="animate-spin" size={20} /> Registering...</>) : (<><User size={20} /> Register Patient</>)}
+                                      {isSubmitting ? (<><Loader2 className="animate-spin" size={20} /> Registering...</>) : (<><User size={20} /> Register Patient</>)}
                                     </button>
                                   </div>
                                 </form>
+
                             </motion.div>
                         )}
                     </AnimatePresence>

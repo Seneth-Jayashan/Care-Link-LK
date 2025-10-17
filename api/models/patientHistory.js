@@ -11,7 +11,7 @@ const patientHistorySchema = new mongoose.Schema(
 
     // Personal Info
     dateOfBirth: { type: Date },
-    gender: { type: String, enum: ['male', 'female', 'other'], default: 'other' },
+    gender: { type: String, enum: ['Male', 'Female', 'Other'], default: 'Other' },
     bloodGroup: { type: String, enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] },
 
     // Medical History
