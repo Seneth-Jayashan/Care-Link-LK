@@ -24,7 +24,6 @@ const MyAppointments = () => {
         // This endpoint gets appointments filtered by the logged-in user (based on your backend logic)
         const res = await api.get('/appointments');
 
-        console.log(res);
         
         // Populate doctorDetails if it's not already
         const populatedAppointments = res.data.map(async (app) => {

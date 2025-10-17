@@ -30,7 +30,6 @@ const PatientDetailModal = ({ modalState, onClose, onSave, fetchPatients }) => {
     const { isOpen, mode, patient } = modalState;
     const [formData, setFormData] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-  console.log('patient: ',patient);
     useEffect(() => {
         if (patient) {
             setFormData({

@@ -50,7 +50,6 @@ export const sendEmailWithQR = async (to, subject, qrDataUrl, password) => {
       ]
     });
 
-    console.log('Email with attached QR sent successfully!');
   } catch (err) {
     console.error('Error sending email:', err);
     throw err; // It's good practice to re-throw the error

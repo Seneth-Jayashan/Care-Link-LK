@@ -46,8 +46,6 @@ export default function Patient() {
     try {
       const res = await api.get(`/patientHistories/email/${searchInput}`);
       const data = res.data.userHistory; // Assuming the API returns the full history object including the populated user
-      console.log(data);
-      // DEBUG: console.log("Fetch by Email Response:", data);
       // Check if 'data.user' exists and is an object before setting patient state
       if (data && data.user && typeof data.user === 'object') {
         setPatient(data.user);
@@ -74,12 +72,9 @@ export default function Patient() {
     setPatient(null); // Clear previous results
     setRecord(null);
     try {
-      // Assuming '/scan' endpoint expects { recordId } or { patientHistoryId }
-      // Use the key your backend expects, e.g., patientHistoryId
       const res = await api.post("/patientHistories/scan", { patientHistoryId: recordId });
       const data = res.data;
 
-      // DEBUG: console.log("Fetch by QR Response:", data);
       if (data && data.user && typeof data.user === 'object') {
         setPatient(data.user);
         setRecord(data);

@@ -154,7 +154,6 @@ export default function AddDoctorForm({ onClose }) {
         if (key === "profileImage" && value) data.append("profileImage", value);
         else data.append(key, value);
         });
-      console.log(data);
       await api.post("/users/", data);
 
       setMessage({ type: "success", text: "Doctor added successfully." });

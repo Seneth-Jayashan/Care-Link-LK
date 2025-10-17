@@ -46,7 +46,6 @@ const Dashboard = () => {
           try {
             const doctorRes = await api.get(`/doctors/user/${user.id}`);
             doctorData = doctorRes.data;
-            console.log("Doctor data fetched:", doctorData);
           } catch (error) {
             console.error("Error fetching doctor data:", error);
             // If doctor not found, use basic user info

@@ -229,7 +229,6 @@ export const deleteUser = async (req, res) => {
     const {id} = req.params;
     const user = await User.findByIdAndDelete(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
-    console.log(user);
     if(user.role === 'patient'){
       await PatientHistory.findOneAndDelete({user:id});
     }else if(user.role === 'doctor'){
@@ -253,7 +252,6 @@ export const deleteUser = async (req, res) => {
 
 export const getLoggedUser = async (req, res) => {
   try {
-    console.log('Logged-in user ID:', req.user._id);
 
     const user = await User.findById(req.user._id)
       .select('-password')

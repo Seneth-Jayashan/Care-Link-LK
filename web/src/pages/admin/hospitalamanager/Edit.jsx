@@ -20,7 +20,6 @@ const Edit = () => {
   });
 
   useEffect(() => {
-    console.log('Edit component mounted with ID:', id);
     if (id) {
       fetchHospitalAdmin();
     } else {
@@ -32,12 +31,8 @@ const Edit = () => {
 
   const fetchHospitalAdmin = async () => {
     try {
-      console.log('Current user:', user);
-      console.log('Fetching user with ID:', id);
-      console.log('Auth token available:', !!localStorage.getItem('authUser'));
       
       const response = await api.get(`/users/${id}`);
-      console.log('API Response:', response.data);
       const adminData = response.data;
       setFormData({
         name: adminData.name || '',

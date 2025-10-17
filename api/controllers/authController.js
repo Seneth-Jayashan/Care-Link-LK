@@ -20,11 +20,11 @@ export const loginUser = async (req, res) => {
 
     // Check if user exists
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials 1' });
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials 2' });
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     // Generate token
     const token = generateToken(user);
@@ -54,7 +54,7 @@ export const loginQR = async (req, res) => {
 
     // Check if user exists
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials 1' });
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
     if(user._id != userId){
       return res.status(403).json({message: 'You cannot access'});
