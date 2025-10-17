@@ -51,6 +51,7 @@ export default function Profile() {
           // fetch patient history if exists
           if (data.patientHistory) {
             const h = await axios.get(`/patientHistories/${data?.patientHistory._id}`);
+            console.log(h);
             setHistory(h.data);
           }
         } catch (err) {

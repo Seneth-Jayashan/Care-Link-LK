@@ -15,13 +15,13 @@ export const getAllPatientHistories = async (req, res) => {
 // Get single patient history by ID
 export const getPatientHistoryById = async (req, res) => {
   try {
-    const history = await PatientHistory.findOne(req.params.id)
+    const history = await PatientHistory.findById(req.params.id)
       .populate('user')
       .populate('appointments');
     if (!history) return res.status(404).json({ message: 'Patient history not found' });
     res.json(history);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', err });
   }
 };
 
