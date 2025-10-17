@@ -40,22 +40,25 @@ export default function AdminUsersPage() {
 
   if (user?.role !== "admin") {
     return (
-      <div className="p-6">
-        <div className="p-4 rounded-xl bg-red-50 text-red-700">Access denied</div>
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-100 p-8 max-w-md w-full">
+          <div className="text-2xl font-bold text-red-700">Access denied</div>
+          <p className="text-blue-700 mt-2">Only administrators can access this page.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Users />
-          <h1 className="text-3xl font-bold">All Users</h1>
-        </div>
+    <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-700 to-blue-400 bg-clip-text text-transparent tracking-tight flex items-center gap-3">
+          <Users className="text-blue-600" /> All Users
+        </h1>
+        <p className="text-blue-600 mt-2 text-lg">Search and view user profiles</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow p-4">
+      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -63,19 +66,19 @@ export default function AdminUsersPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by name, email, phone, role"
-              className="w-full pl-9 pr-3 py-2 border rounded-xl"
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="py-10 text-center">Loading users...</div>
+          <div className="py-10 text-center text-blue-700">Loading users...</div>
         ) : error ? (
-          <div className="py-4 text-red-600">{error}</div>
+          <div className="py-4 text-red-700 bg-red-50 border border-red-200 rounded-xl px-4">{error}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
-              <thead className="bg-gray-100">
+              <thead className="bg-blue-50">
                 <tr>
                   <th className="p-3 text-left">Name</th>
                   <th className="p-3 text-left">Email</th>
@@ -94,7 +97,7 @@ export default function AdminUsersPage() {
                     <td className="p-3">
                       <button
                         onClick={() => setSelectedUser(u)}
-                        className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-xl"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-400 shadow hover:shadow-md"
                       >
                         <Eye size={16} /> View
                       </button>
@@ -108,14 +111,16 @@ export default function AdminUsersPage() {
       </div>
 
       {selectedUser && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">User Information</h2>
-              <button onClick={() => setSelectedUser(null)} className="text-gray-500">✕</button>
+        <div className="fixed inset-0 bg-blue-950/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-4 flex items-center gap-3">
+              <h2 className="text-white text-lg font-bold">User Information</h2>
+              <div className="ml-auto">
+                <button onClick={() => setSelectedUser(null)} className="text-white/90 hover:text-white">✕</button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               <Info label="Name" value={selectedUser.name} />
               <Info label="Email" value={selectedUser.email} />
               <Info label="Phone" value={selectedUser.phone} />
@@ -125,8 +130,8 @@ export default function AdminUsersPage() {
             </div>
 
             {selectedUser.hospital && (
-              <div className="mt-6">
-                <h3 className="font-semibold mb-2">Hospital</h3>
+              <div className="px-6 pb-6">
+                <h3 className="font-semibold mb-2 text-blue-900">Hospital</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Info label="Name" value={selectedUser.hospital?.name} />
                   <Info label="Location" value={selectedUser.hospital?.location} />
@@ -135,8 +140,8 @@ export default function AdminUsersPage() {
             )}
 
             {selectedUser.doctorDetails && (
-              <div className="mt-6">
-                <h3 className="font-semibold mb-2">Doctor Details</h3>
+              <div className="px-6 pb-6">
+                <h3 className="font-semibold mb-2 text-blue-900">Doctor Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Info label="Specialization" value={selectedUser.doctorDetails?.specialization} />
                   <Info label="License Number" value={selectedUser.doctorDetails?.licenseNumber} />
@@ -145,8 +150,8 @@ export default function AdminUsersPage() {
             )}
 
             {selectedUser.patientHistory && (
-              <div className="mt-6">
-                <h3 className="font-semibold mb-2">Patient History</h3>
+              <div className="px-6 pb-6">
+                <h3 className="font-semibold mb-2 text-blue-900">Patient History</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Info label="Blood Type" value={selectedUser.patientHistory?.bloodType} />
                   <Info label="Allergies" value={(selectedUser.patientHistory?.allergies || []).join(", ")} />
@@ -154,8 +159,8 @@ export default function AdminUsersPage() {
               </div>
             )}
 
-            <div className="mt-6 flex justify-end">
-              <button onClick={() => setSelectedUser(null)} className="px-4 py-2 bg-gray-200 rounded-xl">
+            <div className="px-6 pb-6 flex justify-end">
+              <button onClick={() => setSelectedUser(null)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
                 Close
               </button>
             </div>

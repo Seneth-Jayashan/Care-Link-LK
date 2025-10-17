@@ -55,10 +55,10 @@ const Delete = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600">Only administrators can access this page.</p>
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-100 p-8 max-w-md w-full">
+          <h2 className="text-2xl font-bold text-red-700 mb-2">Access Denied</h2>
+          <p className="text-blue-700">Only administrators can access this page.</p>
         </div>
       </div>
     );
@@ -66,10 +66,10 @@ const Delete = () => {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading hospital admin data...</p>
+          <p className="mt-4 text-blue-700">Loading hospital admin data...</p>
         </div>
       </div>
     );
@@ -77,13 +77,13 @@ const Delete = () => {
 
   if (!hospitalAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Hospital Admin Not Found</h2>
-          <p className="text-gray-600 mb-4">The hospital admin you're looking for doesn't exist.</p>
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-8 text-center max-w-md w-full">
+          <h2 className="text-2xl font-bold text-red-700 mb-2">Hospital Admin Not Found</h2>
+          <p className="text-blue-700 mb-4">The hospital admin you're looking for doesn't exist.</p>
           <button
             onClick={handleCancel}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-400 shadow hover:shadow-md"
           >
             Go Back
           </button>
@@ -93,24 +93,24 @@ const Delete = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-3xl font-bold text-red-600 mb-6">Delete Hospital Admin</h1>
+    <div className="min-h-screen p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-6">
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-red-700 to-rose-500 bg-clip-text text-transparent tracking-tight mb-6">Delete Hospital Admin</h1>
           
           {message && (
-            <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl">
               {message}
             </div>
           )}
           
           {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
               {error}
             </div>
           )}
 
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
                 <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,13 +118,13 @@ const Delete = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-red-800">Warning</h3>
+                <h3 className="text-lg font-semibold text-red-800">Warning</h3>
                 <p className="text-red-700">This action cannot be undone. This will permanently delete the hospital admin account.</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Hospital Admin Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -157,20 +157,20 @@ const Delete = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="px-6 py-2 rounded-md text-white bg-gradient-to-r from-red-600 to-rose-500 shadow hover:shadow-md"
               >
                 Delete Hospital Admin
               </button>
             </div>
           ) : (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6">
               <h4 className="text-lg font-semibold text-red-800 mb-4">Confirm Deletion</h4>
               <p className="text-red-700 mb-4">
                 Are you absolutely sure you want to delete <strong>{hospitalAdmin.name}</strong>? 
@@ -180,7 +180,7 @@ const Delete = () => {
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(false)}
-                  className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -188,7 +188,7 @@ const Delete = () => {
                   type="button"
                   onClick={handleDelete}
                   disabled={loading}
-                  className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 rounded-md text-white bg-gradient-to-r from-red-600 to-rose-500 shadow hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Deleting...' : 'Yes, Delete Permanently'}
                 </button>

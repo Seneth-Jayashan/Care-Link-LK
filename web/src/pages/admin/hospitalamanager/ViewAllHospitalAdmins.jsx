@@ -62,31 +62,30 @@ export default function ViewAllHospitalAdmins() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading hospital admins...</p>
+          <p className="mt-4 text-blue-700">Loading hospital admins...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="min-h-screen p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-200 p-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Building2 className="mr-3 h-8 w-8 text-blue-600" />
-                Hospital Administrators
+              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-700 to-blue-400 bg-clip-text text-transparent tracking-tight flex items-center">
+                <Building2 className="mr-3 h-8 w-8 text-blue-600" /> Hospital Administrators
               </h1>
-              <p className="text-gray-600 mt-1">Manage all hospital administrators in the system</p>
+              <p className="text-blue-600 mt-2 text-lg">Manage all hospital administrators in the system</p>
             </div>
             <button
               onClick={handleAdd}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+              className="px-4 py-2 rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-400 shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Hospital Admin
@@ -102,13 +101,13 @@ export default function ViewAllHospitalAdmins() {
                 placeholder="Search hospital admins by name, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
               {error}
             </div>
           )}
@@ -145,7 +144,7 @@ export default function ViewAllHospitalAdmins() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-blue-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Name
@@ -202,14 +201,14 @@ export default function ViewAllHospitalAdmins() {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleEdit(admin._id)}
-                            className="text-blue-600 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 px-2 py-1 rounded flex items-center"
+                            className="text-white bg-gradient-to-r from-blue-600 to-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 px-3 py-1 rounded flex items-center shadow"
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(admin._id)}
-                            className="text-red-600 hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 px-2 py-1 rounded flex items-center"
+                            className="text-white bg-gradient-to-r from-red-600 to-rose-500 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 px-3 py-1 rounded flex items-center shadow"
                           >
                             <Trash2 className="h-4 w-4 mr-1" />
                             Delete

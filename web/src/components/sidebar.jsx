@@ -89,7 +89,6 @@ const Sidebar = () => {
         ],
       },
       { name: "Users", to: "/admin/users", icon: Users },
-      { name: "System Settings", to: "/admin/settings", icon: Settings },
     ],
   };
 
