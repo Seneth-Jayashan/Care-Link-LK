@@ -159,7 +159,7 @@ const BookingSuccess = () => {
               Back to Home
             </Link>
             <Link 
-              to="/my-appointments" 
+              to="/patient/appointments" 
               className="flex items-center justify-center gap-3 px-8 py-4 border-2 border-blue-300 text-blue-700 bg-white font-bold rounded-xl hover:bg-blue-50 hover:scale-105 transition-all duration-300"
             >
               <List size={20} />

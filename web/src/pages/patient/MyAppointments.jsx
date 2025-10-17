@@ -299,66 +299,85 @@ const MyAppointments = () => {
       </div>
 
       {editModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Edit Appointment</h3>
-            <form onSubmit={submitEdit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                <input
-                  type="date"
-                  name="appointmentDate"
-                  value={formValues.appointmentDate}
-                  onChange={handleFormChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Time Slot</label>
-                {editingAppointment?.doctor?.doctorDetails?.schedule?.length > 0 ? (
-                  <select
-                    name="appointmentTime"
-                    value={formValues.appointmentTime}
-                    onChange={handleFormChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="" disabled>Select a time slot</option>
-                    {editingAppointment.doctor.doctorDetails.schedule.map((slot) => (
-                      <option key={slot._id || `${slot.day}-${slot.startTime}`} value={slot.startTime}>
-                        {slot.day}: {slot.startTime} - {slot.endTime}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                    No available time slots for this doctor.
+        <div className="fixed inset-0 bg-blue-950/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-4 flex items-center gap-3">
+              <Pencil className="text-white" size={20} />
+              <h3 className="text-white text-lg font-bold">Edit Appointment</h3>
+            </div>
+            <div className="p-6">
+              <form onSubmit={submitEdit} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-blue-900 mb-1">Date</label>
+                    <input
+                      type="date"
+                      name="appointmentDate"
+                      value={formValues.appointmentDate}
+                      onChange={handleFormChange}
+                      className="w-full rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 px-3 py-2 text-blue-900 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
-                <input
-                  type="text"
-                  name="reason"
-                  value={formValues.reason}
-                  onChange={handleFormChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Describe reason"
-                />
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={closeEditModal} className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button
-                  type="submit"
-                  disabled={!editingAppointment?.doctor?.doctorDetails?.schedule?.length}
-                  className={`px-4 py-2 rounded-md text-white ${editingAppointment?.doctor?.doctorDetails?.schedule?.length ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-                >
-                  Save changes
-                </button>
-              </div>
-            </form>
+                  <div>
+                    <label className="block text-sm font-semibold text-blue-900 mb-1">Time Slot</label>
+                    {editingAppointment?.doctor?.doctorDetails?.schedule?.length > 0 ? (
+                      <select
+                        name="appointmentTime"
+                        value={formValues.appointmentTime}
+                        onChange={handleFormChange}
+                        className="w-full rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="" disabled>
+                          Select a time slot
+                        </option>
+                        {editingAppointment.doctor.doctorDetails.schedule.map((slot) => (
+                          <option key={slot._id || `${slot.day}-${slot.startTime}`} value={slot.startTime}>
+                            {slot.day}: {slot.startTime} - {slot.endTime}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
+                        No available time slots for this doctor.
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-blue-900 mb-1">Reason (optional)</label>
+                  <input
+                    type="text"
+                    name="reason"
+                    value={formValues.reason}
+                    onChange={handleFormChange}
+                    className="w-full rounded-xl border border-blue-200 bg-gradient-to-br from-white to-blue-50 px-3 py-2 text-blue-900 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Describe reason"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={closeEditModal}
+                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!editingAppointment?.doctor?.doctorDetails?.schedule?.length}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-white shadow-md transition ${
+                      editingAppointment?.doctor?.doctorDetails?.schedule?.length
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-400 hover:shadow-lg'
+                        : 'bg-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Save changes
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
