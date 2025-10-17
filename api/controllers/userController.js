@@ -114,6 +114,7 @@ export const createUser = async (req, res) => {
         bio,
         notes: notes || '',
         profileImage: req.file ? req.file.path : null,
+        hospital
       });
 
       await doctorDetails.save();
