@@ -139,6 +139,9 @@ export const getAppointmentById = asyncHandler(async (req, res) => {
 // @route   PUT /api/appointments/:id
 // @access  Private
 export const updateAppointment = asyncHandler(async (req, res) => {
+  if (req.user.role === "admin") {
+    return res.status(403).json({ message: "Access denied" });
+  }
   const appointment = await Appointment.findById(req.params.id);
 
   if (!appointment) {
@@ -160,6 +163,9 @@ export const updateAppointment = asyncHandler(async (req, res) => {
 // @route   DELETE /api/appointments/:id
 // @access  Private
 export const deleteAppointment = asyncHandler(async (req, res) => {
+  if (req.user.role === "patient" || req.user.role === "doctor") {
+    return res.status(403).json({ message: "Access denied" });
+  }
   const appointment = await Appointment.findById(req.params.id);
 
   if (!appointment) {

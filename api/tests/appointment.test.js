@@ -225,7 +225,9 @@ describe('Appointment API Routes', () => {
 
       // Appt 2: Same patient, different doctor (from another hospital)
       const otherHospital = await Hospital.create({ name: 'Other Hospital' , code: 'OH002', address: '456 Wellness'});
-      const otherDoctor = await User.create({ name: 'Other Doc', email: 'otherdoc@e.com', password: '123', role: 'doctor', hospital: otherHospital._id });
+      const otherDoctorUserId = new mongoose.Types.ObjectId();
+      const otherDoctorDetails = await DoctorDetails.create({specialty: 'Cardiology', user: otherDoctorUserId })
+      const otherDoctor = await User.create({ name: 'Other Doc', email: 'otherdoc@e.com', password: '123', role: 'doctor', hospital: otherHospital._id , doctorDetails:otherDoctorDetails._id});
       appt2 = await Appointment.create({
         patient: dbPatientUser._id,
         patientHistory: dbPatientHistory._id,
