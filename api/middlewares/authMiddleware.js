@@ -27,8 +27,11 @@ export const protect = async (req, res, next) => {
 // Role-based access
 export const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: `Role ${req.user.role} not allowed` });
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied: role '${req.user?.role || 'unknown'}' is not permitted`
+      });
     }
     next();
   };

@@ -36,9 +36,6 @@ const userSchema = new mongoose.Schema(
     patientHistory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PatientHistory',
-      required: function() {
-        return this.role === 'patient';
-      },
     },
     doctorDetails: {
       type: mongoose.Schema.Types.ObjectId,

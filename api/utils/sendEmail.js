@@ -1,6 +1,11 @@
 import nodemailer from 'nodemailer';
 
 export const sendEmailWithQR = async (to, subject, qrDataUrl, password) => {
+
+  if (process.env.NODE_ENV === 'test') {
+    console.log('📧 Email sending skipped in test mode');
+    return;
+  }
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,

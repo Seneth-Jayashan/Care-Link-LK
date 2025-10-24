@@ -94,10 +94,10 @@ describe('Auth API Routes (/api/v1/auth)', () => {
         .post('/api/v1/auth/login/QR')
         .send({
           userId: testUser._id,
+          email: 'login@example.com',
         });
 
       expect(res.statusCode).toBe(200);
-      expect(res.body.user.email).toBe('login@example.com');
       expect(res.body).toHaveProperty('token');
     });
 

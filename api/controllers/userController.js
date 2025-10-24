@@ -10,6 +10,9 @@ import fs from 'fs';
 
 // Create User
 export const createUser = async (req, res) => {
+  if (req.user.role === 'patient' || req.user.role === 'doctor') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
   try {
     const {
       name,
@@ -153,6 +156,9 @@ export const createUser = async (req, res) => {
 // GET ALL USERS
 // --------------------
 export const getUsers = async (req, res) => {
+  if (req.user.role === 'patient' || req.user.role === 'doctor') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
   try {
     let filter = {};
 
@@ -232,6 +238,9 @@ export const updateUser = async (req, res) => {
 // DELETE USER
 // --------------------
 export const deleteUser = async (req, res) => {
+  if (req.user.role === 'patient' || req.user.role === 'doctor') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
   try {
     const {id} = req.params;
     const user = await User.findByIdAndDelete(id);
