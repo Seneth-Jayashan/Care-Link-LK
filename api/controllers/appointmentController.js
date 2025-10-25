@@ -3,29 +3,30 @@ import Appointment from "../models/Appointment.js";
 import PatientHistory from "../models/PatientHistory.js";
 import DoctorDetails from "../models/DoctorDetails.js";
 
-// @desc    Create a new appointment
-// @route   POST /api/appointments
-// @access  Private
+
 export const createAppointment = asyncHandler(async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: "Access denied" });
   }
 
-  if (req.user.role === "admin") {
-    return res.status(403).json({ message: "Access denied" });
+  // This page is for doctors, so let's assume the doctor is booking
+  if (req.user.role !== "doctor") {
+    return res.status(403).json({ message: "Only doctors can book appointments from this panel." });
   }
+
   const {
-    patient,
-    doctor,
+    patient, // This will be the patient's User ID
     hospital,
     appointmentDate,
     appointmentTime,
     reason,
   } = req.body;
-  // CHANGED: More robust validation
+
+  // The 'doctor' is the logged-in user
+  const doctorId = req.user._id;
+
   if (
     !patient ||
-    !doctor ||
     !hospital ||
     !appointmentDate ||
     !appointmentTime ||
@@ -35,39 +36,111 @@ export const createAppointment = asyncHandler(async (req, res) => {
     throw new Error("Please provide all required fields for the appointment.");
   }
 
-  // CHANGED: Handle cases where PatientHistory might not exist for a new patient
+  // Find PatientHistory
   let patientHistory = await PatientHistory.findOne({ user: patient });
   if (!patientHistory) {
-    // If no history, create a new one. This makes the system more resilient.
+    // This part of your logic is good!
     patientHistory = new PatientHistory({
       user: patient,
-      medicalHistory: [],
-      testResults: [],
     });
     await patientHistory.save();
   }
 
-  const doctorDetails = await DoctorDetails.findOne({ user: doctor });
+  // Find DoctorDetails
+  const doctorDetails = await DoctorDetails.findOne({ user: doctorId });
+  if (!doctorDetails) {
+    res.status(404);
+    throw new Error("Logged-in doctor's details not found.");
+  }
 
   const appointment = new Appointment({
     patient,
     patientHistory: patientHistory._id,
-    doctor,
-    doctorDetails: doctorDetails?._id,
+    doctor: doctorId, // Use logged-in user ID
+    doctorDetails: doctorDetails._id, // Use found doctor details ID
     hospital,
     appointmentDate,
     appointmentTime,
     reason,
-    status: "pending", // Default status on creation
+    status: "confirmed", // Since doctor is booking, let's auto-confirm
   });
 
   const createdAppointment = await appointment.save();
+
+  // --- THIS IS THE NEW LINE YOU REQUESTED ---
+  // Add the new appointment's ID to the PatientHistory.appointments array
+  await PatientHistory.findByIdAndUpdate(patientHistory._id, {
+    $push: { appointments: createdAppointment._id },
+  });
+  // ------------------------------------------
+
   res.status(201).json(createdAppointment);
 });
 
-// @desc    Get appointments based on user role
-// @route   GET /api/appointments
-// @access  Private
+export const createAppointmentByDoctor = asyncHandler(async (req, res) => {
+
+  const {
+    patient,
+    hospital,
+    appointmentDate,
+    appointmentTime,
+    reason,
+  } = req.body;
+
+  const doctorId = req.user._id;
+
+  if (
+    !patient ||
+    !appointmentDate ||
+    !appointmentTime ||
+    !reason
+  ) {
+    res.status(400);
+    throw new Error("Please provide all required fields for the appointment.");
+  }
+
+  // Find PatientHistory
+  let patientHistory = await PatientHistory.findOne({ user: patient });
+  if (!patientHistory) {
+    // This part of your logic is good!
+    patientHistory = new PatientHistory({
+      user: patient,
+    });
+    await patientHistory.save();
+  }
+
+  // Find DoctorDetails
+  const doctorDetails = await DoctorDetails.findOne({ user: doctorId });
+  if (!doctorDetails) {
+    res.status(404);
+    throw new Error("Logged-in doctor's details not found.");
+  }
+
+  const appointment = new Appointment({
+    patient,
+    patientHistory: patientHistory._id,
+    doctor: doctorId, // Use logged-in user ID
+    doctorDetails: doctorDetails._id, // Use found doctor details ID
+    hospital: doctorDetails.hospital,
+    appointmentDate,
+    appointmentTime,
+    reason,
+    status: "confirmed", // Since doctor is booking, let's auto-confirm
+  });
+
+  const createdAppointment = await appointment.save();
+
+  // --- THIS IS THE NEW LINE YOU REQUESTED ---
+  // Add the new appointment's ID to the PatientHistory.appointments array
+  await PatientHistory.findByIdAndUpdate(patientHistory._id, {
+    $push: { appointments: createdAppointment._id },
+  });
+  // ------------------------------------------
+
+  res.status(201).json(createdAppointment);
+});
+
+
 export const getAppointments = asyncHandler(async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: "Access denied" });
@@ -102,9 +175,7 @@ export const getAppointments = asyncHandler(async (req, res) => {
   res.json(appointments);
 });
 
-// @desc    Get a single appointment by ID
-// @route   GET /api/appointments/:id
-// @access  Private
+
 export const getAppointmentById = asyncHandler(async (req, res) => {
   const appointment = await Appointment.findById(req.params.id)
     .populate("patient", "name email phone")
@@ -135,9 +206,7 @@ export const getAppointmentById = asyncHandler(async (req, res) => {
   res.json(appointment);
 });
 
-// @desc    Update an appointment
-// @route   PUT /api/appointments/:id
-// @access  Private
+
 export const updateAppointment = asyncHandler(async (req, res) => {
   if (req.user.role === "admin") {
     return res.status(403).json({ message: "Access denied" });
@@ -159,9 +228,7 @@ export const updateAppointment = asyncHandler(async (req, res) => {
   res.json(updatedAppointment);
 });
 
-// @desc    Delete an appointment
-// @route   DELETE /api/appointments/:id
-// @access  Private
+
 export const deleteAppointment = asyncHandler(async (req, res) => {
   if (req.user.role === "patient" || req.user.role === "doctor") {
     return res.status(403).json({ message: "Access denied" });
