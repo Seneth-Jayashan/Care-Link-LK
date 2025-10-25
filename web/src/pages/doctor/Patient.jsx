@@ -33,6 +33,121 @@ export default function Patient() {
   const [editableRecord, setEditableRecord] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Report generation
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateReport = () => {
+    if (!patient || !record) return;
+    setIsGenerating(true);
+
+    try {
+      const safeJoin = (arr) => (Array.isArray(arr) && arr.length ? arr.join(", ") : "None");
+
+      const medsRows = (record.medications || []).map(
+        (m, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${m.name || ""}</td>
+            <td>${m.dosage || ""}</td>
+            <td>${m.frequency || ""}</td>
+            <td>${m.startDate ? new Date(m.startDate).toLocaleDateString() : ""}</td>
+          </tr>
+        `
+      ).join("");
+
+      const html = `
+        <!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>Patient History Report</title>
+            <style>
+              body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 24px; }
+              h1 { margin: 0 0 4px; font-size: 22px; }
+              h2 { font-size: 16px; margin: 24px 0 8px; }
+              .muted { color: #6b7280; font-size: 12px; }
+              .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+              .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+              .row { display: flex; gap: 8px; }
+              .label { width: 140px; color: #374151; font-weight: 600; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #e5e7eb; padding: 8px; font-size: 12px; text-align: left; }
+              th { background: #f3f4f6; }
+              @media print {
+                .no-print { display: none; }
+                body { margin: 0; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="no-print" style="text-align:right; margin-bottom: 8px;">
+              <button onclick="window.print()" style="padding:8px 12px; border:1px solid #e5e7eb; background:#111827; color:#fff; border-radius:6px;">Print / Save as PDF</button>
+            </div>
+
+            <h1>Patient History Report</h1>
+            <div class="muted">Generated: ${new Date().toLocaleString()} | Record ID: ${record._id || "-"}</div>
+
+            <div class="card" style="margin-top:16px;">
+              <h2>Patient Information</h2>
+              <div class="grid">
+                <div class="row"><div class="label">Name</div><div>${patient.name || "N/A"}</div></div>
+                <div class="row"><div class="label">Email</div><div>${patient.email || "N/A"}</div></div>
+                <div class="row"><div class="label">Phone</div><div>${patient.phone || "N/A"}</div></div>
+                <div class="row"><div class="label">Gender</div><div>${record.gender || "N/A"}</div></div>
+                <div class="row"><div class="label">Date of Birth</div><div>${record.dateOfBirth ? new Date(record.dateOfBirth).toLocaleDateString() : "N/A"}</div></div>
+                <div class="row"><div class="label">Blood Group</div><div>${record.bloodGroup || "N/A"}</div></div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+              <h2>Medical History</h2>
+              <div class="grid">
+                <div class="row"><div class="label">Chronic Diseases</div><div>${safeJoin(record.chronicDiseases)}</div></div>
+                <div class="row"><div class="label">Allergies</div><div>${safeJoin(record.allergies)}</div></div>
+                <div class="row"><div class="label">Past Surgeries</div><div>${safeJoin(record.pastSurgeries)}</div></div>
+                <div class="row"><div class="label">Family History</div><div>${safeJoin(record.familyHistory)}</div></div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+              <h2>Medications / Prescriptions</h2>
+              ${medsRows
+                ? `<table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Start Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>${medsRows}</tbody>
+                  </table>`
+                : '<div class="muted">No medications listed.</div>'}
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+              <h2>Doctor\'s Notes</h2>
+              <div>${record.notes ? String(record.notes).replace(/\n/g, '<br/>') : '<span class="muted">No notes provided.</span>'}</div>
+            </div>
+          </body>
+        </html>
+      `;
+
+      const win = window.open("", "_blank");
+      if (!win) throw new Error("Popup blocked. Please allow popups to generate the report.");
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    } catch (e) {
+      console.error(e);
+      setMessage({ text: `❌ Failed to generate report: ${e.message}`, type: "error" });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // --- Fetch by Email ---
   const fetchPatientByEmail = async () => {
     if (!searchInput) {
@@ -274,7 +389,15 @@ export default function Patient() {
                     <p><strong>Blood Group:</strong> {record.bloodGroup || "Not set"}</p>
                   </div>
                   {/* Edit/Save/Cancel Buttons */}
-                  <div className="flex-shrink-0"> {/* Prevent buttons wrapping awkwardly */}
+                  <div className="flex-shrink-0 flex items-center gap-2"> {/* Prevent buttons wrapping awkwardly */}
+                    <button
+                      onClick={handleGenerateReport}
+                      disabled={isGenerating || isEditing}
+                      className={`px-4 py-2 rounded-lg font-semibold flex items-center justify-center ${isGenerating || isEditing ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                      title={isEditing ? 'Cannot generate report while editing the record' : 'Generate printable report'}
+                    >
+                      {isGenerating ? 'Generating…' : 'Generate Report'}
+                    </button>
                     {!isEditing ? (
                       <button onClick={handleEdit} className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 flex items-center gap-2">
                         <Edit size={16} /> Edit Record
