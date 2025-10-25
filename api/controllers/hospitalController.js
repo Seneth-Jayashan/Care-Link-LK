@@ -1,32 +1,92 @@
 import Hospital from '../models/Hospital.js';
 import fs from 'fs';
 import User from '../models/user.js';
+import Tesseract from "tesseract.js";
+import stringSimilarity from "string-similarity"; 
 
-// Create Hospital
-export const createHospital = async (req, res) => {
-  try {
-    const { name, code, address, contact, departments, bedCapacity, facilities, rating, notes } = req.body;
+export const verifyLicense = async (req, res) => {
+  const { licensePath, hospitalName } = req.body; 
 
-    const hospital = new Hospital({
-      name,
-      code,
-      address,
-      contact,
-      departments,
-      bedCapacity,
-      facilities,
-      rating,
-      notes,
-      hospitalAdmins: req.user._id, // assign the creator as admin
+  if (!licensePath || !hospitalName) {
+    return res.status(400).json({
+      message: "License path and Hospital Name are required for verification.",
     });
+  }
 
-    await hospital.save();
+  console.log(`[Verify] Received request for: ${licensePath}`);
 
-    // Assign hospital ID to user and save
+  try {
+    console.log(`[Verify] Running OCR on ${licensePath} to find name...`);
+    const { data: { text } } = await Tesseract.recognize(licensePath, "eng");
+
+    const nameRegex = /Name\s*:\s*(.+)/i;
+    const nameMatch = text.match(nameRegex);
+
+    if (!nameMatch || !nameMatch[1]) {
+      console.log(`[Verify] FAILED. Could not extract name from document.`);
+      return res
+        .status(400)
+        .json({ message: "Could not read Hospital Name from license document." });
+    }
+
+    const extractedName = nameMatch[1].trim();
+    console.log(`[Verify] Found name in doc: "${extractedName}"`);
+    console.log(`[Verify] Comparing to form name: "${hospitalName}"`);
+
+    const similarity = stringSimilarity.compareTwoStrings(
+      extractedName.toLowerCase(),
+      hospitalName.toLowerCase()
+    );
+
+    if (similarity < 0.6) {
+      console.log(`[Verify] FAILED. Name similarity too low: ${similarity}`);
+      return res.status(400).json({
+        message: `Name mismatch. The name on the license ("${extractedName}") does not closely match the name you entered ("${hospitalName}").`,
+      });
+    }
+
+    console.log(`[Verify] Name check passed. Similarity: ${similarity}`);
+
+    console.log(`[Verify] Simulating external license check...`);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    console.log(`[Verify] SIMULATED SUCCESS for: ${licensePath}`);
+    res.status(200).json({
+      verified: true,
+      message: "License successfully verified (Simulated).",
+    });
+  } catch (error) {
+    console.error("License verification error:", error);
+    res
+      .status(500)
+      .json({ message: "Server error during license verification." });
+  }
+};
+
+export const createHospital = async (req, res) => {
+  try {
+    const { name, code, address, contact, departments, bedCapacity, facilities, rating, notes, licenseDocument } = req.body; // 👈 NEW
+
+    const hospital = new Hospital({
+      name,
+      code,
+      address,
+      contact,
+      departments,
+      bedCapacity,
+      facilities,
+      rating,
+      notes,
+      hospitalAdmins: req.user._id, 
+      licenseDocument: licenseDocument
+    }); 
+
+    await hospital.save();
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { hospital: hospital._id }, // ✅ wrap in braces
-      { new: true } // ✅ return updated user
+      { hospital: hospital._id }, 
+      { new: true } 
     );
 
 
