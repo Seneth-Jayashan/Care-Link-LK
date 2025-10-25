@@ -7,6 +7,7 @@ import appointmentRoutes from './routes/appointmentRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import reportsRoutes from './routes/reportsRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use('/hospitals', hospitalRoutes);
 router.use('/appointments', appointmentRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/reports', reportsRoutes);
+router.use('/upload', uploadRoutes)
 
 export default router;

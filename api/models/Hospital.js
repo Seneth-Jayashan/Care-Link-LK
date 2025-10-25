@@ -45,6 +45,9 @@ const hospitalSchema = new mongoose.Schema(
         ref: 'User', // only users with role: 'hospitaladmin'
       },
     ],
+    licenseDocument: {
+      type: String,
+    },
 
     // Optional hospital info
     bedCapacity: { type: Number, default: 0 },

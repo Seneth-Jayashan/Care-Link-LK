@@ -17,16 +17,17 @@ import {
     X,
     HeartPulse,
     Sparkles,
+    // --- NEW ---
+    Check,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // 👈 Import useNavigate
-import Swal from "sweetalert2"; // 👈 Import SweetAlert2
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import api from "../../api/api";
 
 // ------------------- Reusable Components (Color Updated) -------------------
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     <div className="flex items-center gap-4 mb-6">
-        {/* Updated icon container background and shadow */}
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
             <Icon className="text-white" size={24} />
         </div>
@@ -101,12 +102,56 @@ const InputField = ({ label, name, value, onChange, ...props }) => (
             name={name}
             value={value}
             onChange={onChange}
-            // Focus ring color changed to match theme
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             {...props}
         />
     </div>
 );
+
+// ------------------- NEW FILE UPLOAD COMPONENT -------------------
+
+const FileUploadField = ({ file, onFileChange, onClear }) => (
+    <div>
+        <label className="block mb-1.5 text-sm font-medium text-gray-700">
+            License Document
+        </label>
+        {file ? (
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-300 rounded-lg">
+                <div className="flex items-center gap-2 text-green-700">
+                    <Check size={18} />
+                    <span className="text-sm font-medium truncate">{file.name}</span>
+                </div>
+                <button
+                    type="button"
+                    onClick={onClear}
+                    className="text-red-500 hover:text-red-700"
+                >
+                    <X size={18} />
+                </button>
+            </div>
+        ) : (
+            <div className="relative">
+                <input
+                    type="file"
+                    id="license"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={onFileChange}
+                    accept=".pdf,.jpg,.jpeg,.png" // Set acceptable file types
+                />
+                <label
+                    htmlFor="license"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
+                >
+                    <FileText size={18} className="text-gray-500" />
+                    <span className="text-sm font-medium text-gray-600">
+                        Click to upload license (PDF, JPG, PNG)
+                    </span>
+                </label>
+            </div>
+        )}
+    </div>
+);
+
 
 // ------------------- Main Component -------------------
 
@@ -114,11 +159,11 @@ export default function HospitalManagement() {
     const [activeTab, setActiveTab] = useState("view");
     const [hospital, setHospital] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState({ text: "", type: "" }); // {text, type: 'success' | 'error'}
+    const [message, setMessage] = useState({ text: "", type: "" });
 
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const user = JSON.parse(localStorage.getItem('authUser')); 
+    const user = JSON.parse(localStorage.getItem('authUser'));
     const initialFormData = {
         name: "",
         code: "",
@@ -140,14 +185,24 @@ export default function HospitalManagement() {
 
     const [formData, setFormData] = useState(initialFormData);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // --- NEW STATES FOR VERIFICATION FLOW ---
+    const [licenseFile, setLicenseFile] = useState(null);
+    const [submitStatus, setSubmitStatus] = useState(""); // For button text
+    
     const navigate = useNavigate();
 
-    // --- UTILS & API LOGIC (NO CHANGES BELOW) ---
-    const resetFormData = () => setFormData(initialFormData);
+    // --- UTILS & API LOGIC ---
+    
+    // --- UPDATED to reset file ---
+    const resetFormData = () => {
+        setFormData(initialFormData);
+        setLicenseFile(null);
+    };
 
     const showMessage = (text, type = "success") => {
         setMessage({ text, type });
-        setTimeout(() => setMessage({ text: "", type: "" }), 5000); 
+        setTimeout(() => setMessage({ text: "", type: "" }), 5000);
     };
 
     useEffect(() => {
@@ -181,7 +236,7 @@ export default function HospitalManagement() {
         };
 
         fetchHospital();
-    }, []);
+    }, [user.id]); // Added dependency
 
 
     const handleDeleteConfirm = () => setIsDeleting(true);
@@ -227,6 +282,14 @@ export default function HospitalManagement() {
         });
         setIsEditing(true);
         setActiveTab("add");
+        setLicenseFile(null); // Reset file on edit start
+    };
+
+    // --- NEW File handler ---
+    const handleFileChange = (e) => {
+        if (e.target.files[0]) {
+            setLicenseFile(e.target.files[0]);
+        }
     };
 
     const handleChange = (e) => {
@@ -271,12 +334,16 @@ export default function HospitalManagement() {
             facilities: prev.facilities.filter((_, i) => i !== index),
         }));
 
+
+    // ------------------- MODIFIED SUBMIT HANDLER -------------------
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         try {
             if (isEditing) {
+                // --- UPDATE (EDIT) FLOW (no change) ---
+                setSubmitStatus("Updating...");
                 const res = await api.put(`/hospitals/${hospital._id}`, formData);
                 setHospital(res.data);
                 await Swal.fire({
@@ -289,16 +356,56 @@ export default function HospitalManagement() {
                 setIsEditing(false);
                 setActiveTab('view');
             } else {
-                const res = await api.post('/hospitals', formData);
+                // --- CREATE (NEW) FLOW with VERIFICATION ---
+                
+                // 0. Check for license file
+                if (!licenseFile) {
+                    await Swal.fire({ icon: 'error', title: 'Missing License', text: 'Please upload the hospital license document to proceed.' });
+                    setIsSubmitting(false); // Stop submission
+                    return;
+                }
+
+                // 1. Upload License
+                setSubmitStatus("Uploading License...");
+                const fileData = new FormData();
+                fileData.append('license', licenseFile);
+                
+                // *** ASSUMED ENDPOINT: You must create this on your backend ***
+                // This endpoint should save the file and return its path/URL
+                const uploadRes = await api.post('/upload/license', fileData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                const licensePath = uploadRes.data.path; // e.g., "uploads/license-123.pdf"
+
+                // 2. Verify License (via backend)
+                setSubmitStatus("Verifying License...");
+                
+                // *** ASSUMED ENDPOINT: You must create this on your backend ***
+                // This endpoint should take the licensePath, call the external verification service,
+                // and throw an error if verification fails.
+                await api.post('/hospitals/verify-license', { 
+                    licensePath, 
+                    hospitalName: formData.name // 👈 NEW
+                });
+                
+                // 3. Create Hospital (if verification passed)
+                setSubmitStatus("Creating Hospital...");
+                const finalFormData = { 
+                    ...formData, 
+                    licenseDocument: licensePath // Add the verified license path
+                };
+                
+                const res = await api.post('/hospitals', finalFormData);
                 setHospital(res.data);
+                
                 await Swal.fire({
                     icon: 'success',
-                    title: 'Created!',
+                    title: 'Created & Verified!',
                     text: 'Hospital created successfully!',
                     timer: 1500,
                     showConfirmButton: false,
                 });
-                navigate('/hospital');
+                navigate('/hospital'); // Or wherever you want to redirect
             }
         } catch (err) {
             const errorMsg = err.response?.data?.message || 'Something went wrong';
@@ -309,8 +416,11 @@ export default function HospitalManagement() {
             });
         } finally {
             setIsSubmitting(false);
+            setSubmitStatus(""); // Reset status text
         }
     };
+    // ------------------- END OF MODIFIED HANDLER -------------------
+
 
     const renderViewContent = () => (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
@@ -385,6 +495,15 @@ export default function HospitalManagement() {
                 <InputField label="Email" type="email" name="contact.email" value={formData.contact.email} onChange={handleChange} placeholder="info@hospital.lk" />
             </div>
 
+            {/* --- NEW FILE UPLOAD (Only on create) --- */}
+            {!isEditing && (
+                <FileUploadField 
+                    file={licenseFile}
+                    onFileChange={handleFileChange}
+                    onClear={() => setLicenseFile(null)}
+                />
+            )}
+
             {/* Address Section */}
             <div>
                 <label className="block mb-2 text-sm font-bold text-gray-800">Address Details</label>
@@ -430,31 +549,35 @@ export default function HospitalManagement() {
                 <textarea name="notes" value={formData.notes} onChange={handleChange} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Any additional notes..." />
             </div>
 
-            {/* Submit Button */}
+            {/* --- UPDATED Submit Button --- */}
             <div className=" flex gap-2 items-center justify-between ">
-            <motion.button 
-                type="submit" 
-                whileHover={{ scale: 1.02 }} 
-                whileTap={{ scale: 0.98 }} 
-                disabled={isSubmitting} 
-                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:from-blue-400 disabled:to-blue-300"
-            >
-                {isSubmitting && <Loader2 className="animate-spin" size={18} />}
-                {isSubmitting ? "Saving..." : isEditing ? "Update Hospital" : "Create Hospital"}
-            </motion.button>
-            
-            {/* Cancel Edit Button */}
-            {isEditing && (
-                <motion.button 
-                    type="button" 
-                    onClick={() => { setIsEditing(false); setActiveTab("view"); }}
+                <motion.button
+                    type="submit"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full md:w-auto px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl shadow-md hover:bg-gray-300 transition-all ml-4"
+                    disabled={isSubmitting}
+                    className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:from-blue-400 disabled:to-blue-300"
                 >
-                    Cancel Edit
+                    {isSubmitting && <Loader2 className="animate-spin" size={18} />}
+                    {/* Dynamic text based on status */}
+                    {isSubmitting
+                        ? submitStatus
+                        : isEditing
+                            ? "Update Hospital"
+                            : "Create & Verify Hospital"}
                 </motion.button>
-            )}
+                
+                {isEditing && (
+                    <motion.button
+                        type="button"
+                        onClick={() => { setIsEditing(false); setActiveTab("view"); }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full md:w-auto px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl shadow-md hover:bg-gray-300 transition-all ml-4"
+                    >
+                        Cancel Edit
+                    </motion.button>
+                )}
             </div>
         </motion.form>
     );
@@ -465,7 +588,7 @@ export default function HospitalManagement() {
                 layout
                 className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border border-blue-100"
             >
-                {/* Header (Matching the DoctorsPage style) */}
+                {/* Header */}
                 <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-inner">
                     <div className="flex items-center gap-4 text-white">
                         <div className="w-12 h-12 bg-white/30 rounded-xl flex items-center justify-center shadow-md">
@@ -477,7 +600,7 @@ export default function HospitalManagement() {
                         </div>
                     </div>
                     
-                    {/* Tabs (Matching the DoctorsPage style) */}
+                    {/* Tabs */}
                     <div className="flex bg-white/20 rounded-xl p-1 shadow-inner">
                         <TabButton
                             id="view"
@@ -487,7 +610,7 @@ export default function HospitalManagement() {
                             setActiveTab={setActiveTab}
                             disabled={!hospital}
                         />
-                        {(!hospital || isEditing) && ( // Show 'Add' if no hospital or 'Edit' if editing
+                        {(!hospital || isEditing) && (
                             <TabButton
                                 id="add"
                                 label={isEditing ? "Edit Form" : "Add"}
@@ -500,7 +623,7 @@ export default function HospitalManagement() {
                     </div>
                 </div>
 
-                {/* --- 📣 Message Bar --- */}
+                {/* Message Bar */}
                 <AnimatePresence>
                     {message.text && (
                         <motion.div
@@ -540,7 +663,7 @@ export default function HospitalManagement() {
     );
 }
 
-// Tab Button Component (Color theme adjusted)
+// Tab Button Component
 const TabButton = ({ id, label, icon: Icon, activeTab, setActiveTab, disabled, onClick }) => (
     <button
         onClick={() => {
@@ -555,8 +678,7 @@ const TabButton = ({ id, label, icon: Icon, activeTab, setActiveTab, disabled, o
         {activeTab === id && (
             <motion.div
                 layoutId="activeTab"
-                // Match the Doctor's page background: clean white tab with blue text
-                className="absolute inset-0 bg-white rounded-xl z-0 shadow-md" 
+                className="absolute inset-0 bg-white rounded-xl z-0 shadow-md"
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
         )}
