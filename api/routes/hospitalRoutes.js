@@ -5,6 +5,7 @@ import {
   getHospitalById,
   updateHospital,
   deleteHospital,
+  verifyLicense,
 } from '../controllers/hospitalController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -20,5 +21,11 @@ router.get('/:id', protect, authorize('admin', 'hospitaladmin', 'doctor'), getHo
 // Admin can update or delete hospital
 router.put('/:id', protect, authorize('admin', 'hospitaladmin'), updateHospital);
 router.delete('/:id', protect, authorize('admin','hospitaladmin'), deleteHospital);
+
+router.post(
+  "/verify-license",
+  protect, 
+  verifyLicense
+);
 
 export default router;
