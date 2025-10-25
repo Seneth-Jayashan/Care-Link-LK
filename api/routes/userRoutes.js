@@ -11,7 +11,7 @@ router.get('/:id', protect, authorize('admin', 'doctor', 'hospitaladmin', 'patie
 
 // Admin / hospital admin routes
 router.get('/', protect, authorize('admin', 'doctor', 'hospitaladmin'), getUsers);
-router.post('/', authorize('admin', 'hospitaladmin'),protect, upload.single('profileImage'), createUser);
+router.post('/' ,protect, authorize('admin', 'hospitaladmin'), upload.single('profileImage'), createUser);
 router.put('/:id', protect, authorize('admin', 'hospitaladmin'), upload.single('profileImage'), updateUser);
 router.delete('/:id', protect, authorize('admin', 'hospitaladmin'), deleteUser);
 
