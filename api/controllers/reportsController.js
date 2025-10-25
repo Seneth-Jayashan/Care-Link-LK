@@ -10,10 +10,14 @@ export const getFinanceReport = async (req, res) => {
     if (!req.user?.role || !['hospitaladmin', 'admin'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Forbidden' });
     }
-
     const match = {};
-    if (hospitalId) match.hospital = hospitalId;
-    // If hospital admin, default to their hospital when not explicitly provided
+    if (hospitalId) {
+      try {
+        match.hospital = new mongoose.Types.ObjectId(hospitalId);
+      } catch {
+        match.hospital = hospitalId; // fallback if already ObjectId-like
+      }
+    }    // If hospital admin, default to their hospital when not explicitly provided
     if (!hospitalId && req.user.role === 'hospitaladmin' && req.user.hospital) {
       match.hospital = req.user.hospital;
     }
@@ -78,6 +82,7 @@ export const getFinanceReport = async (req, res) => {
 
 // Patient visit report: counts by status/date/doctor within hospital
 export const getPatientVisitReport = async (req, res) => {
+
   try {
     const { startDate, endDate, hospitalId } = req.query;
 
@@ -167,6 +172,10 @@ export const getPatientVisitReport = async (req, res) => {
 export const getPatientVisitDebug = async (req, res) => {
   try {
     const { startDate, endDate, hospitalId, limit = 20 } = req.query;
+
+    if (!req.user?.role || !['hospitaladmin', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
 
     const match = {};
     if (hospitalId) {
