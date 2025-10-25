@@ -22,11 +22,16 @@ jest.mock('../middlewares/authMiddleware.js', () => ({
   authorize: jest.fn(() => (req, res, next) => next()), // Default: pass through
 }));
 
-// Mock 'fs' to prevent errors when controller tries to delete files
-jest.mock('fs', () => ({
-  existsSync: jest.fn(() => true),
-  unlinkSync: jest.fn(),
-}));
+// Replace the old fs mock with this one
+jest.mock('fs', () => {
+  const originalFs = jest.requireActual('fs'); // 1. Get the real 'fs' module
+  return {
+    ...originalFs, // 2. Keep all its original functions (fixes Tesseract)
+    existsSync: jest.fn(() => true), // 3. Override only what you need
+    unlinkSync: jest.fn(),           // 3. Override only what you need
+    mkdirSync: jest.fn(),           // 4. Add mkdirSync to stop uploadRoutes from crashing
+  };
+});
 
 // --- Helper Function to Simulate Login ---
 const mockLogin = (user) => {

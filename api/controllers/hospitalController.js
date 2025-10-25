@@ -64,6 +64,9 @@ export const verifyLicense = async (req, res) => {
 };
 
 export const createHospital = async (req, res) => {
+  if(req.user.role === 'doctor' || req.user.role === 'patient'){
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const { name, code, address, contact, departments, bedCapacity, facilities, rating, notes, licenseDocument } = req.body; // 👈 NEW
 
@@ -100,6 +103,9 @@ export const createHospital = async (req, res) => {
 
 // Get all hospitals
 export const getHospitals = async (req, res) => {
+  if(req.user.role === 'patient'){
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const hospitals = await Hospital.find()
       .populate('doctors', 'name email role')
@@ -113,6 +119,9 @@ export const getHospitals = async (req, res) => {
 
 // Get hospital by ID
 export const getHospitalById = async (req, res) => {
+  if(req.user.role === 'patient'){
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const hospital = await Hospital.findById(req.params.id)
       .populate('doctors', 'name email role')
@@ -127,6 +136,9 @@ export const getHospitalById = async (req, res) => {
 
 // Update hospital
 export const updateHospital = async (req, res) => {
+  if(req.user.role === 'doctor'){
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const hospital = await Hospital.findById(req.params.id);
     if (!hospital) return res.status(404).json({ message: 'Hospital not found' });
@@ -146,6 +158,9 @@ export const updateHospital = async (req, res) => {
 
 // Delete hospital
 export const deleteHospital = async (req, res) => {
+  if(req.user.role === 'doctor'){
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const hospital = await Hospital.findByIdAndDelete(req.params.id);
     if (!hospital) return res.status(404).json({ message: 'Hospital not found' });

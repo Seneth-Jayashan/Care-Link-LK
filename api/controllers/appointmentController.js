@@ -2,36 +2,25 @@ import asyncHandler from "express-async-handler";
 import Appointment from "../models/Appointment.js";
 import PatientHistory from "../models/PatientHistory.js";
 import DoctorDetails from "../models/DoctorDetails.js";
+import User from "../models/user.js";
 
 
 export const createAppointment = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Access denied" });
-  }
 
-  // This page is for doctors, so let's assume the doctor is booking
-  if (req.user.role !== "doctor") {
-    return res.status(403).json({ message: "Only doctors can book appointments from this panel." });
+  if (!req.user || req.user.role === 'admin') {
+    return res.status(403).json({ message: "Access denied" });
   }
 
   const {
-    patient, // This will be the patient's User ID
+    patient, 
+    doctor,
     hospital,
     appointmentDate,
     appointmentTime,
     reason,
   } = req.body;
 
-  // The 'doctor' is the logged-in user
-  const doctorId = req.user._id;
-
-  if (
-    !patient ||
-    !hospital ||
-    !appointmentDate ||
-    !appointmentTime ||
-    !reason
-  ) {
+  if (!patient ||!hospital ||!doctor ||!appointmentDate ||!appointmentTime ||!reason) {
     res.status(400);
     throw new Error("Please provide all required fields for the appointment.");
   }
@@ -47,16 +36,24 @@ export const createAppointment = asyncHandler(async (req, res) => {
   }
 
   // Find DoctorDetails
-  const doctorDetails = await DoctorDetails.findOne({ user: doctorId });
+
+  const doc = await User.findById(doctor);
+  if (!doc) {
+    res.status(404);
+    throw new Error("doctor not found.");
+  }
+
+  const doctorDetails = await DoctorDetails.findById(doc.doctorDetails);
+
   if (!doctorDetails) {
     res.status(404);
-    throw new Error("Logged-in doctor's details not found.");
+    throw new Error("doctor's details not found.");
   }
 
   const appointment = new Appointment({
     patient,
     patientHistory: patientHistory._id,
-    doctor: doctorId, // Use logged-in user ID
+    doctor: doctor, // Use logged-in user ID
     doctorDetails: doctorDetails._id, // Use found doctor details ID
     hospital,
     appointmentDate,
@@ -67,8 +64,6 @@ export const createAppointment = asyncHandler(async (req, res) => {
 
   const createdAppointment = await appointment.save();
 
-  // --- THIS IS THE NEW LINE YOU REQUESTED ---
-  // Add the new appointment's ID to the PatientHistory.appointments array
   await PatientHistory.findByIdAndUpdate(patientHistory._id, {
     $push: { appointments: createdAppointment._id },
   });

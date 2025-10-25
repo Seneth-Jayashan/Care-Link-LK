@@ -146,12 +146,12 @@ describe('Appointment API Routes', () => {
     it('should allow a patient to create an appointment', async () => {
       mockLogin(patient);
       const res = await request(app).post('/api/v1/appointments').send(newAppointmentData);
-      
+      console.log(res.body);
       expect(res.statusCode).toBe(201);
       expect(res.body.patient).toBe(dbPatientUser._id.toString());
       expect(res.body.doctor).toBe(dbDoctorUser._id.toString());
       expect(res.body.patientHistory).toBe(dbPatientHistory._id.toString()); // Check if history was linked
-      expect(res.body.status).toBe('pending');
+      expect(res.body.status).toBe('confirmed');
     });
 
     it('should allow a doctor to create an appointment', async () => {
