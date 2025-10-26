@@ -1,95 +1,35 @@
-import User from '../models/user.js';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config();
-
-// Generate JWT token
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-};
-
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
-
-    // Generate token
-    const token = generateToken(user);
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        patientHistory: user.patientHistory || null,
-        doctorDetails: user.doctorDetails || null,
-        hospital: user.hospital || null,
-        token,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-export const loginQR = async (req, res) => {
-  try {
-    const { email, userId } = req.body;
-
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-
-    if(user._id != userId){
-      return res.status(403).json({message: 'You cannot access'});
-    }
-
-    // Generate token
-    const token = generateToken(user);
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        patientHistory: user.patientHistory || null,
-        doctorDetails: user.doctorDetails || null,
-        hospital: user.hospital || null,
-        token,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+import asyncHandler from 'express-async-handler';
+import { loginWithEmailPassword, loginWithQR } from '../services/authService.js';
+import { generateToken } from '../utils/tokenUtils.js';
+import { formatAuthResponse } from '../utils/responseFormatter.js';
 
 
-// @desc    Logout user
-// @route   POST /api/auth/logout
-// @access  Private
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await loginWithEmailPassword(email, password);
+
+  const token = generateToken(user);
+
+  res.json(formatAuthResponse(user, token));
+});
+
+
+export const loginQR = asyncHandler(async (req, res) => {
+  const { email, userId } = req.body;
+
+  // 1. Let the service handle validation
+  const user = await loginWithQR(email, userId);
+
+  // 2. Generate token
+  const token = generateToken(user);
+
+  // 3. Format and send response
+  res.json(formatAuthResponse(user, token));
+});
+
+
 export const logoutUser = (req, res) => {
-  // Since JWT is stateless, logout is done client-side
-  // Optionally, you can implement token blacklist if needed
   res.json({ message: 'Logged out successfully' });
 };
+

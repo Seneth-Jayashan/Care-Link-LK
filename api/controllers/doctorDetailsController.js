@@ -1,74 +1,34 @@
-import DoctorDetails from '../models/DoctorDetails.js';
+// controllers/doctorDetailsController.js
+import asyncHandler from 'express-async-handler';
+import {
+  getAllDoctorDetailsService,
+  getDoctorDetailsByIdService,
+  getDoctorDetailsByUserIdService,
+  updateDoctorDetailsService,
+  deleteDoctorDetailsService,
+} from '../services/doctorDetailsService.js'; 
 
-// Get all doctor details
-export const getAllDoctorDetails = async (req, res) => {
-  try {
-    const doctors = await DoctorDetails.find()
-      .populate({
-        path: 'user',
-        populate: { path: 'hospital' } 
-      })
-      .populate('hospital'); 
+export const getAllDoctorDetails = asyncHandler(async (req, res) => {
+  const doctors = await getAllDoctorDetailsService(req.user);
+  res.status(200).json(doctors);
+});
 
-    let result = doctors;
+export const getDoctorDetailsById = asyncHandler(async (req, res) => {
+  const doctor = await getDoctorDetailsByIdService(req.params.id);
+  res.json(doctor);
+});
 
-    if (req.user.role !== 'admin') {
-      const reqHospitalId = req.user?.hospital?._id?.toString();
-      result = doctors.filter(doc => {
-        const userHospitalId = doc.user?.hospital?._id?.toString();
-        return userHospitalId === reqHospitalId;
-      });
-    }
+export const getDoctorDetailsByUserId = asyncHandler(async (req, res) => {
+  const doctor = await getDoctorDetailsByUserIdService(req.params.id);
+  res.json(doctor);
+});
 
-    res.status(200).json(result);
-  } catch (err) {
-    console.error('Error fetching doctor details:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-};
+export const updateDoctorDetails = asyncHandler(async (req, res) => {
+  const doctor = await updateDoctorDetailsService(req.params.id, req.body);
+  res.json(doctor);
+});
 
-
-
-// Get single doctor details by ID
-export const getDoctorDetailsById = async (req, res) => {
-  try {
-    const doctor = await DoctorDetails.findById(req.params.id).populate('user').populate('hospital');
-    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
-    res.json(doctor);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Get single doctor details by ID
-export const getDoctorDetailsByUserId = async (req, res) => {
-  try {
-    const doctor = await DoctorDetails.findOne({user:req.params.id}).populate('user').populate('hospital');
-    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
-    res.json(doctor);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Update doctor details
-export const updateDoctorDetails = async (req, res) => {
-  try {
-    const doctor = await DoctorDetails.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
-    res.json(doctor);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Delete doctor details
-export const deleteDoctorDetails = async (req, res) => {
-  try {
-    const doctor = await DoctorDetails.findByIdAndDelete(req.params.id);
-    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
-    res.json({ message: 'Doctor deleted' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+export const deleteDoctorDetails = asyncHandler(async (req, res) => {
+  const result = await deleteDoctorDetailsService(req.params.id);
+  res.json(result);
+});

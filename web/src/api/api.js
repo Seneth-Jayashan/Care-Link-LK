@@ -9,12 +9,9 @@ const api = axios.create({
 // Attach token to all requests automatically
 api.interceptors.request.use(
   (config) => {
-    const savedUser = localStorage.getItem("authUser");
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      if (user?.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
-      }
+    const savedToken = localStorage.getItem("authToken");
+    if (savedToken) {
+      config.headers.Authorization = `Bearer ${savedToken}`;
     }
     return config;
   },
