@@ -76,7 +76,7 @@ export const getPatientByQRCodeService = async (patientHistoryId, user) => {
 
   const patientHistory = await PatientHistory.findById(patientHistoryId)
     .populate('user', 'name email phone role hospital') 
-    .populate('appointments'); s
+    .populate('appointments'); 
 
   if (!patientHistory) {
     throw new NotFoundError('Patient history not found for the provided ID');
