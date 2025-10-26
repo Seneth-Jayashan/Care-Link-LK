@@ -10,13 +10,8 @@ import {
 import { BadRequestError } from '../utils/errorResponse.js';
 
 export const verifyLicense = asyncHandler(async (req, res) => {
-  const { hospitalName } = req.body;
-  
-  if (!req.file) {
-    throw new BadRequestError("License document file is required.");
-  }
-  
-  const licensePath = req.file.path;
+  const { hospitalName,licensePath } = req.body;
+
   const result = await verifyLicenseService(licensePath, hospitalName);
   
   res.status(200).json(result);
