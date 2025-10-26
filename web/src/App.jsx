@@ -9,6 +9,7 @@ import DashboardLayout from "./components/layouts/DashboardLayout";
 // Pages
 import Home from "./pages/Home";
 import About from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs.jsx";
 import Login from "./pages/Login";
 
 import PatientDashboard from "./pages/patient/Dashboard";
@@ -77,6 +78,14 @@ function App() {
         element={
           <MainLayout>
             <About />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/contact"
+        element={
+          <MainLayout>
+            <ContactUs />
           </MainLayout>
         }
       />

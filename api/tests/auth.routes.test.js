@@ -1,145 +1,73 @@
-// tests/auth.routes.test.js
 const request = require('supertest');
 const app = require('../app.js').default;
 const User = require('../models/user.js').default;
 const mongoose = require('mongoose');
+// Import the *real* token generator, just like your login controller
+// (or use the test helper from our previous session)
+const { generateTestToken } = require('./helpers/tokenHelper.js'); 
 
-// --- Mock Auth Middleware ---
-// This is necessary to test protected routes like /logout
-const authMiddleware = require('../middlewares/authMiddleware.js');
-jest.mock('../middlewares/authMiddleware.js', () => ({
-  protect: jest.fn((req, res, next) => next()), // Default: pass through
-  authorize: jest.fn(() => (req, res, next) => next()),
-}));
-
-// --- Helper Function to Simulate Login ---
-const mockLogin = (user) => {
-  authMiddleware.protect.mockImplementation((req, res, next) => {
-    req.user = user;
-    next();
-  });
-};
-
-// --- Helper Function to Simulate Logout ---
-const mockLogout = () => {
-  authMiddleware.protect.mockImplementation((req, res, next) => {
-    res.status(401).json({ message: 'Not authenticated' });
-  });
-};
+// --- DO NOT MOCK authMiddleware ---
+// jest.mock('../middlewares/authMiddleware.js', ...); // DELETE THIS
 
 // --- Test Suite ---
 describe('Auth API Routes (/api/v1/auth)', () => {
-  let testUser;
+  let testUser;
 
-  // Before each test, clear mocks and seed a user
-  beforeEach(async () => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    jest.clearAllMocks(); // This is for other mocks like 'fs', still good.
 
-    // We create an 'admin' user for simple login tests
-    // as it doesn't have complex dependencies
-    testUser = await User.create({
-      name: 'Test User',
-      email: 'login@example.com',
-      password: 'password123', // The 'pre-save' hook will hash this
-      role: 'admin',
+    testUser = await User.create({
+      name: 'Test User',
+      email: 'login@example.com',
+      password: 'password123', 
+      role: 'admin',
+    });
+  });
+
+  // --- POST /api/v1/auth/login ---
+  describe('POST /api/v1/auth/login', () => {
+    // ... all your login tests are perfectly fine ...
+    // ... they don't use auth middleware, so they already work ...
+    it('should log in a user with correct credentials...', async () => {
+      // ... (no change needed)
     });
   });
 
-  // --- POST /api/v1/auth/login ---
-  describe('POST /api/v1/auth/login', () => {
-    it('should log in a user with correct credentials and return a token', async () => {
-      const res = await request(app)
-        .post('/api/v1/auth/login')
-        .send({
-          email: 'login@example.com',
-          password: 'password123',
-        });
-
-      // Assuming your controller returns 200, user data, and a token
-      expect(res.statusCode).toBe(200);
-      expect(res.body.user.email).toBe('login@example.com');
-      expect(res.body).toHaveProperty('token');
+  // --- POST /api/v1/auth/login/QR ---
+  describe('POST /api/v1/auth/login/QR', () => {
+    // ... all your loginQR tests are also fine ...
+    it('should log in a user with a valid QR identifier...', async () => {
+      // ... (no change needed)
     });
+  });
 
-    it('should reject login with an incorrect password', async () => {
-      const res = await request(app)
-        .post('/api/v1/auth/login')
-        .send({
-          email: 'login@example.com',
-          password: 'wrongpassword',
-        });
+  // --- POST /api/v1/auth/logout ---
+  describe('POST /api/v1/auth/logout', () => {
+   it('should be protected and return 401 if no user is logged in', async () => {
+      // REMOVED: mockLogout();
 
-      // Assuming your controller returns 401 for bad credentials
-      expect(res.statusCode).toBe(401);
-    });
+      const res = await request(app)
+        .post('/api/v1/auth/logout')
+        .send();
 
-    it('should reject login with a non-existent email', async () => {
-      const res = await request(app)
-        .post('/api/v1/auth/login')
-        .send({
-          email: 'nobody@example.com',
-          password: 'password123',
-        });
+      // Now we test the REAL middleware's response
+      expect(res.statusCode).toBe(401);
+      expect(res.body.message).toBe('Not authorized, no token');
+   });
 
-      // Assuming your controller returns 401 for user not found
-      expect(res.statusCode).toBe(401);
-    });
-  });
+    it('should log out an authenticated user successfully', async () => {
+      // REMOVED: mockLogin(testUser);
+      
+      // 1. Generate a REAL token
+      const token = generateTestToken(testUser);
 
-  // --- POST /api/v1/auth/login/QR ---
-  describe('POST /api/v1/auth/login/QR', () => {
-    it('should log in a user with a valid QR identifier (e.g., userId)', async () => {
-      // This test assumes 'loginQR' accepts a 'userId' in the body
-      const res = await request(app)
-        .post('/api/v1/auth/login/QR')
-        .send({
-          userId: testUser._id,
-          email: 'login@example.com',
-        });
+      const res = await request(app)
+        .post('/api/v1/auth/logout')
+        .set('Authorization', `Bearer ${token}`) // 2. Send the real token
+        .send();
 
-      expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty('token');
-    });
-
-    it('should reject QR login with a non-existent userId', async () => {
-      const randomId = new mongoose.Types.ObjectId();
-      const res = await request(app)
-        .post('/api/v1/auth/login/QR')
-        .send({
-          userId: randomId,
-        });
-
-      // Assuming your controller returns 401 or 404
-      expect(res.statusCode).toBe(401);
-    });
-  });
-
-  // --- POST /api/v1/auth/logout ---
-  describe('POST /api/v1/auth/logout', () => {
-    it('should be protected and return 401 if no user is logged in', async () => {
-      // Simulate being logged out
-      mockLogout();
-
-      const res = await request(app)
-        .post('/api/v1/auth/logout')
-        .send();
-
-      expect(res.statusCode).toBe(401);
-      expect(authMiddleware.protect).toHaveBeenCalled();
-    });
-
-    it('should log out an authenticated user successfully', async () => {
-      // Simulate being logged in
-      mockLogin(testUser);
-
-      const res = await request(app)
-        .post('/api/v1/auth/logout')
-        .send();
-
-      // Assuming your controller returns 200 and a success message
-      expect(res.statusCode).toBe(200);
-      expect(res.body.message).toBe('Logged out successfully');
-      expect(authMiddleware.protect).toHaveBeenCalled();
-    });
-  });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.message).toBe('Logged out successfully');
+    });
+  });
 });

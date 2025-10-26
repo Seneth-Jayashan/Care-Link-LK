@@ -35,6 +35,7 @@ export default function DisplayDoctors() {
         const res = await api.get("/doctors");
         const validDoctors = res.data.filter((doc) => doc.user && typeof doc.user === "object");
         setDoctors(validDoctors);
+        console.log('doctors data: ', validDoctors);
       } catch (err) {
         console.error("Error fetching doctors:", err);
         setError("Failed to fetch doctors. Please try again later.");

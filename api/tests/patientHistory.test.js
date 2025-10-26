@@ -1,332 +1,271 @@
-// tests/patientHistory.test.js
-const request = require('supertest');
-const app = require('../app.js').default; // Assuming app.js exports default
-const User = require('../models/user.js').default;
-const PatientHistory = require('../models/PatientHistory.js').default;
-const DoctorDetails = require('../models/DoctorDetails.js').default;
-const Hospital = require('../models/Hospital.js').default;
-const mongoose = require('mongoose');
+import request from 'supertest';
+import app from '../app.js';
+import User from '../models/user.js';
+import PatientHistory from '../models/PatientHistory.js';
+import DoctorDetails from '../models/DoctorDetails.js';
+import Hospital from '../models/Hospital.js';
+import mongoose from 'mongoose';
+import { generateTestToken } from './helpers/tokenHelper.js'; // Import REAL token helper
 
-// --- Mock Middleware ---
-const authMiddleware = require('../middlewares/authMiddleware.js');
+// --- DO NOT MOCK authMiddleware ---
 
-jest.mock('../middlewares/authMiddleware.js', () => ({
-  protect: jest.fn((req, res, next) => next()),
-  authorize: jest.fn(() => (req, res, next) => next()),
-}));
-
-// --- Helper Function to Simulate Login ---
-const mockLogin = (user) => {
-  authMiddleware.protect.mockImplementation((req, res, next) => {
-    req.user = user;
-    next();
-  });
-
-  authMiddleware.authorize.mockImplementation((...roles) => (req, res, next) => {
-    if (req.user && roles.includes(req.user.role)) {
-      next();
-    } else {
-      res.status(403).json({ message: 'Not authorized' });
-    }
-  });
-};
-
-// Helper function to simulate being logged out
-const mockLogout = () => {
-  authMiddleware.protect.mockImplementation((req, res, next) => {
-    res.status(401).json({ message: 'Not authenticated' });
-  });
-};
-
-// --- Test Suite ---
-
-// --- FIX: Corrected base path in describe block ---
 describe('Patient History API Routes (/api/v1/patientHistories)', () => {
-  let admin, hospitalAdmin;
-  let doctorLogin, patient1Login, patient2Login;
-  let doctor1, patient1, patient2;
-  let history1, history2;
+  // Define users and tokens needed for tests
+  let adminUser, hospitalAdminUser, doctorUser, patient1User, patient2User;
+  let adminToken, hospitalAdminToken, doctorToken, patient1Token, patient2Token;
+  let history1, history2; // Store history documents
   let doc1Details;
   let testHospital;
 
   beforeEach(async () => {
-    jest.resetAllMocks();
+    jest.resetAllMocks(); // For non-auth mocks if any
 
-    // Clear database collections
+    // Clear relevant database collections
     await User.deleteMany({});
     await PatientHistory.deleteMany({});
     await DoctorDetails.deleteMany({});
     await Hospital.deleteMany({});
 
-    // Create a mock hospital
-    testHospital = new Hospital({ name: 'Test Hospital' , code: 'TH001'});
-    await testHospital.save();
+    // 1. Create Hospital
+    testHospital = await Hospital.create({ name: 'Test Hospital', code: 'TH001' });
 
-    // === Create Mock Users (for logging in) ===
-    admin = { _id: new mongoose.Types.ObjectId(), role: 'admin' };
-    hospitalAdmin = { _id: new mongoose.Types.ObjectId(), role: 'hospitaladmin', hospital: testHospital._id };
+    // 2. Create Real DB Users for Authentication and Data
+    adminUser = await User.create({ name: 'Admin', email: 'admin_ph@test.com', role: 'admin', password: '123' });
+    hospitalAdminUser = await User.create({ name: 'HAdmin PH', email: 'hadmin_ph@test.com', role: 'hospitaladmin', password: '123', hospital: testHospital._id });
 
-    // === Create Real DB Users and Histories ===
-
-    // Doctor 1
-    doctor1 = new User({
-      _id: new mongoose.Types.ObjectId(),
-      name: 'Doctor One',
-      email: 'd1@test.com',
-      role: 'doctor',
-      password: '123',
-      hospital: testHospital._id
-    });
-    doc1Details = new DoctorDetails({ user: doctor1._id, specialty: 'Cardiology' });
-    doctor1.doctorDetails = doc1Details._id;
+    // Doctor User
+    doctorUser = new User({ name: 'Doctor PH', email: 'doc_ph@test.com', role: 'doctor', password: '123', hospital: testHospital._id });
+    doc1Details = new DoctorDetails({ user: doctorUser._id, specialty: 'Testing' });
+    doctorUser.doctorDetails = doc1Details._id;
     await doc1Details.save();
-    await doctor1.save();
-    doctorLogin = { ...doctor1.toObject() }; // Mock login user based on real doc
+    await doctorUser.save();
 
-    // Patient 1
-    patient1 = new User({
-      _id: new mongoose.Types.ObjectId(),
-      name: 'Patient One',
-      email: 'p1@test.com',
-      role: 'patient',
-      password: '123'
-    });
-    history1 = new PatientHistory({ user: patient1._id, bloodGroup: 'A+', allergies: ['Peanuts'] });
-    patient1.patientHistory = history1._id;
+    // Patient 1 User and History
+    patient1User = new User({ name: 'Patient PH One', email: 'p1_ph@test.com', role: 'patient', password: '123' });
+    history1 = new PatientHistory({ user: patient1User._id, bloodGroup: 'A+', allergies: ['Pollen'] });
+    patient1User.patientHistory = history1._id;
     await history1.save();
-    await patient1.save();
-    patient1Login = { ...patient1.toObject() }; // Mock login user
+    await patient1User.save();
 
-    // Patient 2
-    patient2 = new User({
-      _id: new mongoose.Types.ObjectId(),
-      name: 'Patient Two',
-      email: 'p2@test.com',
-      role: 'patient',
-      password: '123'
-    });
-    history2 = new PatientHistory({ user: patient2._id, bloodGroup: 'B+' });
-    patient2.patientHistory = history2._id;
+    // Patient 2 User and History
+    patient2User = new User({ name: 'Patient PH Two', email: 'p2_ph@test.com', role: 'patient', password: '123' });
+    history2 = new PatientHistory({ user: patient2User._id, bloodGroup: 'B-' });
+    patient2User.patientHistory = history2._id;
     await history2.save();
-    await patient2.save();
-    patient2Login = { ...patient2.toObject() }; // Mock login user
+    await patient2User.save();
+
+    // 3. Generate REAL Tokens
+    adminToken = generateTestToken(adminUser);
+    hospitalAdminToken = generateTestToken(hospitalAdminUser);
+    doctorToken = generateTestToken(doctorUser);
+    patient1Token = generateTestToken(patient1User);
+    patient2Token = generateTestToken(patient2User);
   });
 
+  afterAll(async () => {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+  });
+
+
   // --- GET / (getAllPatientHistories) ---
-  // --- FIX: Corrected base path ---
   describe('GET /api/v1/patientHistories', () => {
     it('should be protected from unauthenticated users', async () => {
-      mockLogout();
-      // --- FIX: Corrected base path ---
       const res = await request(app).get('/api/v1/patientHistories');
       expect(res.statusCode).toBe(401);
     });
 
     it('should not allow patient to get all histories', async () => {
-      mockLogin(patient1Login);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get('/api/v1/patientHistories');
-      expect(res.statusCode).toBe(403);
+      const res = await request(app)
+        .get('/api/v1/patientHistories')
+        .set('Authorization', `Bearer ${patient1Token}`);
+      expect(res.statusCode).toBe(403); // Test authorize middleware
     });
 
     it('should allow admin to get all histories', async () => {
-      mockLogin(admin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get('/api/v1/patientHistories');
+      const res = await request(app)
+        .get('/api/v1/patientHistories')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(res.statusCode).toBe(200);
-      expect(res.body.length).toBe(2);
+      expect(res.body.length).toBe(2); // history1, history2
     });
 
-    it('should allow doctor to get all histories', async () => {
-      mockLogin(doctorLogin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get('/api/v1/patientHistories');
+     it('should allow doctor to get all histories', async () => {
+      const res = await request(app)
+        .get('/api/v1/patientHistories')
+        .set('Authorization', `Bearer ${doctorToken}`);
       expect(res.statusCode).toBe(200);
       expect(res.body.length).toBe(2);
     });
   });
 
   // --- GET /:id (getPatientHistoryById) ---
-  // --- FIX: Corrected base path ---
   describe('GET /api/v1/patientHistories/:id', () => {
     it('should allow admin to get any history by ID', async () => {
-      mockLogin(admin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get(`/api/v1/patientHistories/${history1._id}`);
+      const res = await request(app)
+        .get(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(res.statusCode).toBe(200);
       expect(res.body.bloodGroup).toBe('A+');
     });
 
     it('should allow patient to view their *own* history', async () => {
-      mockLogin(patient1Login);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get(`/api/v1/patientHistories/${history1._id}`);
+      const res = await request(app)
+        .get(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${patient1Token}`);
       expect(res.statusCode).toBe(200);
-      expect(res.body.user.name).toBe('Patient One');
+      expect(res.body.user._id).toBe(patient1User._id.toString());
     });
 
-    // NOTE: This test will fail (200) until you add the security fix I recommended
     it('should NOT allow a patient to view *another* patient\'s history', async () => {
-      mockLogin(patient2Login); // Logged in as Patient Two
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get(`/api/v1/patientHistories/${history1._id}`); // Getting Patient One's history
-      expect(res.statusCode).toBe(403); // <-- Expect 403, not 200
+      const res = await request(app)
+        .get(`/api/v1/patientHistories/${history1._id}`) // Getting Patient One's history
+        .set('Authorization', `Bearer ${patient2Token}`); // Logged in as Patient Two
+      expect(res.statusCode).toBe(403); // Test service layer security check
+      expect(res.body.message).toBe('Access denied: You can only view your own history.');
     });
 
-    it('should return 404 for a non-existent history ID', async () => {
-      mockLogin(admin);
+     it('should return 404 for a non-existent history ID', async () => {
       const badId = new mongoose.Types.ObjectId();
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get(`/api/v1/patientHistories/${badId}`);
+      const res = await request(app)
+        .get(`/api/v1/patientHistories/${badId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(res.statusCode).toBe(404);
     });
   });
 
-  // --- GET /email/:email (getPatientByEmail) ---
-  // --- FIX: Corrected base path ---
+   // --- GET /email/:email (getPatientByEmail) ---
   describe('GET /api/v1/patientHistories/email/:email', () => {
     it('should allow doctor to get history by email', async () => {
-      mockLogin(doctorLogin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get(`/api/v1/patientHistories/email/${patient1.email}`);
+      const res = await request(app)
+        .get(`/api/v1/patientHistories/email/${patient1User.email}`)
+        .set('Authorization', `Bearer ${doctorToken}`);
       expect(res.statusCode).toBe(200);
-      expect(res.body.userHistory.bloodGroup).toBe('A+');
+      expect(res.body.bloodGroup).toBe('A+'); // Check response structure
     });
 
-    it('should return 404 for non-existent email', async () => {
-      mockLogin(doctorLogin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get('/api/v1/patientHistories/email/bad@email.com');
-      // This test requires you to fix the 'josn' typo in your controller
+     it('should return 404 for non-existent email', async () => {
+      const res = await request(app)
+        .get('/api/v1/patientHistories/email/bad@email.com')
+        .set('Authorization', `Bearer ${doctorToken}`);
       expect(res.statusCode).toBe(404);
-      expect(res.body.message).toBe('Patient not found');
+      expect(res.body.message).toBe('User not found with that email or is not a patient');
     });
 
-    it('should not allow patient to get history by email', async () => {
-      mockLogin(patient1Login);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).get(`/api/v1/patientHistories/email/${patient2.email}`);
-      expect(res.statusCode).toBe(403);
+     it('should not allow patient to get history by email', async () => {
+      const res = await request(app)
+        .get(`/api/v1/patientHistories/email/${patient2User.email}`)
+        .set('Authorization', `Bearer ${patient1Token}`);
+      expect(res.statusCode).toBe(403); // Fails middleware
     });
   });
 
   // --- POST /scan (getPatientByQRCode) ---
-  // --- FIX: Corrected base path ---
   describe('POST /api/v1/patientHistories/scan', () => {
     it('should allow doctor to get history by QR code (ID)', async () => {
-      mockLogin(doctorLogin);
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .post('/api/v1/patientHistories/scan')
+        .set('Authorization', `Bearer ${doctorToken}`)
         .send({ patientHistoryId: history1._id });
       expect(res.statusCode).toBe(200);
-      expect(res.body.user.name).toBe('Patient One');
+      expect(res.body.user._id).toBe(patient1User._id.toString());
     });
 
-    it('should not allow admin to use scan route', async () => {
-      mockLogin(admin);
+     it('should not allow admin to use scan route', async () => {
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .post('/api/v1/patientHistories/scan')
+        .set('Authorization', `Bearer ${adminToken}`) // Admin not allowed by route
         .send({ patientHistoryId: history1._id });
       expect(res.statusCode).toBe(403);
     });
 
-    it('should return 400 if patientHistoryId is missing', async () => {
-      mockLogin(doctorLogin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).post('/api/v1/patientHistories/scan').send({});
+     it('should return 400 if patientHistoryId is missing', async () => {
+      const res = await request(app)
+        .post('/api/v1/patientHistories/scan')
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .send({});
       expect(res.statusCode).toBe(400);
       expect(res.body.message).toBe('patientHistoryId is required');
     });
 
-    it('should return 404 if patientHistoryId is not found', async () => {
-      mockLogin(doctorLogin);
+     it('should return 404 if patientHistoryId is not found', async () => {
       const badId = new mongoose.Types.ObjectId();
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .post('/api/v1/patientHistories/scan')
+        .set('Authorization', `Bearer ${doctorToken}`)
         .send({ patientHistoryId: badId });
       expect(res.statusCode).toBe(404);
     });
   });
 
   // --- PUT /:id (updatePatientHistory) ---
-  // --- FIX: Corrected base path ---
   describe('PUT /api/v1/patientHistories/:id', () => {
-    it('should allow admin to update any history', async () => {
-      mockLogin(admin);
+     it('should allow admin to update any history', async () => {
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .put(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ bloodGroup: 'O-' });
       expect(res.statusCode).toBe(200);
       expect(res.body.bloodGroup).toBe('O-');
     });
 
-    it('should allow patient to update their *own* history', async () => {
-      mockLogin(patient1Login);
+     it('should allow patient to update their *own* history', async () => {
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .put(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${patient1Token}`)
         .send({ gender: 'Male' });
       expect(res.statusCode).toBe(200);
       expect(res.body.gender).toBe('Male');
     });
 
-    // NOTE: This test will fail (200) until you add the security fix I recommended
-    it('should NOT allow patient to update *another* patient\'s history', async () => {
-      mockLogin(patient2Login); // Logged in as Patient Two
+     it('should NOT allow patient to update *another* patient\'s history', async () => {
       const res = await request(app)
-        // --- FIX: Corrected base path ---
-        .put(`/api/v1/patientHistories/${history1._id}`) // Updating Patient One's history
+        .put(`/api/v1/patientHistories/${history1._id}`) // Updating Patient One
+        .set('Authorization', `Bearer ${patient2Token}`) // Logged in as Patient Two
         .send({ bloodGroup: 'AB-' });
-      expect(res.statusCode).toBe(403); // <-- Expect 403, not 200
+      expect(res.statusCode).toBe(403); // Test service security check
+      expect(res.body.message).toBe('Access denied: You can only update your own history.');
     });
 
-    it('should not allow doctor to use general update route', async () => {
-      mockLogin(doctorLogin);
+     it('should not allow doctor to use general update route', async () => {
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .put(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${doctorToken}`) // Doctor should use /doctor/:id
         .send({ bloodGroup: 'O-' });
-      expect(res.statusCode).toBe(403);
+      expect(res.statusCode).toBe(403); // Test service security check
+      expect(res.body.message).toBe("Access denied: role 'doctor' is not permitted");
     });
   });
 
-  // --- PUT /doctor/:id (updatePatientHistoryByDoctor) ---
-  // --- FIX: Corrected base path ---
+   // --- PUT /doctor/:id (updatePatientHistoryByDoctor) ---
   describe('PUT /api/v1/patientHistories/doctor/:id', () => {
     it('should allow doctor to update a history', async () => {
-      mockLogin(doctorLogin);
-      const newAllergies = ['Peanuts', 'Dust'];
+      const newAllergies = ['Pollen', 'Dust'];
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .put(`/api/v1/patientHistories/doctor/${history1._id}`)
-        .send({ allergies: newAllergies, notes: 'Patient needs follow-up.' });
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .send({ allergies: newAllergies, notes: 'Follow-up needed.' });
 
       expect(res.statusCode).toBe(200);
       expect(res.body.allergies).toEqual(newAllergies);
-      expect(res.body.notes).toBe('Patient needs follow-up.');
+      expect(res.body.notes).toBe('Follow-up needed.');
     });
 
-    it('should not allow patient to use doctor update route', async () => {
-      mockLogin(patient1Login);
+     it('should not allow patient to use doctor update route', async () => {
       const res = await request(app)
-        // --- FIX: Corrected base path ---
         .put(`/api/v1/patientHistories/doctor/${history1._id}`)
+        .set('Authorization', `Bearer ${patient1Token}`) // Patient not allowed by route
         .send({ notes: 'Self update' });
       expect(res.statusCode).toBe(403);
     });
   });
 
   // --- DELETE /:id (deletePatientHistory) ---
-  // --- FIX: Corrected base path ---
   describe('DELETE /api/v1/patientHistories/:id', () => {
     it('should allow admin to delete a history', async () => {
-      mockLogin(admin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).delete(`/api/v1/patientHistories/${history1._id}`);
+      const res = await request(app)
+        .delete(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(res.statusCode).toBe(200);
       expect(res.body.message).toBe('Patient history deleted');
       
@@ -334,18 +273,19 @@ describe('Patient History API Routes (/api/v1/patientHistories)', () => {
       expect(historyInDb).toBeNull();
     });
 
-    it('should not allow doctor to delete a history', async () => {
-      mockLogin(doctorLogin);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).delete(`/api/v1/patientHistories/${history1._id}`);
+     it('should not allow doctor to delete a history', async () => {
+      const res = await request(app)
+        .delete(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${doctorToken}`); // Not allowed by route
       expect(res.statusCode).toBe(403);
     });
 
-    it('should not allow patient to delete a history', async () => {
-      mockLogin(patient1Login);
-      // --- FIX: Corrected base path ---
-      const res = await request(app).delete(`/api/v1/patientHistories/${history1._id}`);
+     it('should not allow patient to delete a history', async () => {
+      const res = await request(app)
+        .delete(`/api/v1/patientHistories/${history1._id}`)
+        .set('Authorization', `Bearer ${patient1Token}`); // Not allowed by route
       expect(res.statusCode).toBe(403);
     });
   });
+
 });

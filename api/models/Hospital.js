@@ -32,19 +32,12 @@ const hospitalSchema = new mongoose.Schema(
       },
     ],
 
-    // Staff references
-    doctors: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // only users with role: 'doctor'
-      },
-    ],
-    hospitalAdmins: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // only users with role: 'hospitaladmin'
-      },
-    ],
+
+    hospitalAdmins: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    }],
+
     licenseDocument: {
       type: String,
     },
@@ -57,8 +50,35 @@ const hospitalSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+// Virtual populate for doctors
+hospitalSchema.virtual('doctors', {
+  ref: 'User',
+  localField: '_id',
+  foreignField: 'hospital',
+  justOne: false,
+  match: { role: 'doctor' }
+});
+
+hospitalSchema.post('findOneAndDelete', async function (doc) {
+  if (doc) {
+    try {
+      const User = mongoose.model('User');
+      // Set hospital field to null for ALL users (admins, doctors)
+      // who were associated with this hospital.
+      await User.updateMany(
+        { hospital: doc._id },
+        { $set: { hospital: null } }
+      );
+    } catch (err) {
+      console.error('Error in hospital post-delete hook:', err);
+    }
+  }
+});
 
 const Hospital = mongoose.model('Hospital', hospitalSchema);
 

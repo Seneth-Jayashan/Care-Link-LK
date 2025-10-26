@@ -59,6 +59,24 @@ const appointmentSchema = new mongoose.Schema(
   }
 );
 
+appointmentSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+  try {
+    // We use mongoose.model() here to avoid circular dependency errors
+    const PatientHistory = mongoose.model('PatientHistory'); 
+    
+    // Find the patient history linked to this appointment
+    if (this.patientHistory) {
+      // Remove this appointment's ID from the history's array
+      await PatientHistory.findByIdAndUpdate(this.patientHistory, {
+        $pull: { appointments: this._id },
+      });
+    }
+    next();
+  } catch (err) {
+    next(err); // Pass errors to the handler
+  }
+});
+
 const Appointment = mongoose.model('Appointment', appointmentSchema);
 
 export default Appointment;

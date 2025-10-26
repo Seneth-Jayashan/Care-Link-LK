@@ -105,19 +105,21 @@ export default function Profile() {
 
   const TagList = ({ icon: Icon, label, items }) => (
     <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className="text-blue-600" size={18} />
-        <p className="text-sm font-semibold text-blue-600">{label}</p>
-      </div>
+      {/* ... icon and label ... */}
       <div className="flex flex-wrap gap-2">
-        {items.length > 0 ? (
+        {items && items.length > 0 ? ( // Added check for items existence
           items.map((item, index) => (
             <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-              {item}
+              {/* --- THIS IS THE FIX --- */}
+              {/* Check if item is an object and has a name, otherwise display item directly */}
+              {typeof item === 'object' && item !== null && item.name ? item.name : item}
+              {/* You could also format medication differently if needed: */}
+              {/* {typeof item === 'object' && item !== null && item.dosage ? `${item.name} (${item.dosage})` : item} */}
+              {/* --- END FIX --- */}
             </span>
           ))
         ) : (
-          <span className="text-blue-500 text-sm">None</span>
+          <span className="text-blue-500 text-sm">None specified</span> // Slightly better text
         )}
       </div>
     </div>

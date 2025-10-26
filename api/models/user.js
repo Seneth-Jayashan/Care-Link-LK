@@ -67,6 +67,40 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+userSchema.post('findOneAndDelete', async function (doc) {
+  if (doc) {
+    try {
+      console.log(`Cleaning up after deleting user: ${doc.name}`);
+
+      // We use mongoose.model('ModelName') to avoid circular import errors
+      const PatientHistory = mongoose.model('PatientHistory');
+      const DoctorDetails = mongoose.model('DoctorDetails');
+      const Hospital = mongoose.model('Hospital');
+
+      // 1. Delete related documents
+      if (doc.role === 'patient') {
+        await PatientHistory.findOneAndDelete({ user: doc._id });
+      } else if (doc.role === 'doctor') {
+        await DoctorDetails.findOneAndDelete({ user: doc._id });
+      } else if (doc.role === 'hospitaladmin') {
+        // Pull this admin's ID from any hospital admin arrays
+        await Hospital.updateMany(
+          { hospitalAdmins: doc._id },
+          { $pull: { hospitalAdmins: doc._id } }
+        );
+      }
+      
+      // 2. Delete profile image from filesystem
+      if (doc.profileImage && fs.existsSync(doc.profileImage)) {
+        fs.unlinkSync(doc.profileImage);
+        console.log(`Deleted profile image: ${doc.profileImage}`);
+      }
+    } catch (err) {
+      // The console.error from your log is coming from here
+      console.error('Error in user post-delete hook:', err);
+    }
+  }
+});
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;

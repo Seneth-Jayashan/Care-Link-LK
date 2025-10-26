@@ -215,7 +215,7 @@ export default function Patient() {
 
     try {
       const res = await api.get(`/patientHistories/email/${searchInput}`);
-      const data = res.data.userHistory;
+      const data = res.data;
       if (data && data.user && typeof data.user === "object") {
         setPatient(data.user);
         setRecord(data);
