@@ -54,7 +54,8 @@ export default function Patient() {
 
     try {
       const res = await api.get(`/patientHistories/email/${searchInput}`);
-      const data = res.data.userHistory;
+      console.log(res.data);
+      const data = res.data;
       if (data && data.user && typeof data.user === 'object') {
         setPatient(data.user);
         setRecord(data);
@@ -363,13 +364,13 @@ export default function Patient() {
                   <EditableField
                     label="Past Surgeries"
                     value={ isEditing ? editableRecord.pastSurgeries.join(", ") : record.pastSurgeries?.join(", ") || ""}
-AN                   onChange={(e) => handleArrayFieldChange("pastSurgeries", e.target.value)}
+                   onChange={(e) => handleArrayFieldChange("pastSurgeries", e.target.value)}
                     isEditing={isEditing}
                   />
                   <EditableField
                     label="Family History"
                     value={ isEditing ? editableRecord.familyHistory.join(", ") : record.familyHistory?.join(", ") || ""}
-IC                   onChange={(e) => handleArrayFieldChange("familyHistory", e.target.value)}
+                   onChange={(e) => handleArrayFieldChange("familyHistory", e.target.value)}
                     isEditing={isEditing}
                   />
                 </div>
@@ -400,7 +401,7 @@ IC                   onChange={(e) => handleArrayFieldChange("familyHis
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                       <input 
-              _         type="date"
+                        type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         min={new Date().toISOString().split("T")[0]} 
