@@ -54,7 +54,6 @@ export default function Patient() {
 
     try {
       const res = await api.get(`/patientHistories/email/${searchInput}`);
-      console.log(res.data);
       const data = res.data;
       if (data && data.user && typeof data.user === 'object') {
         setPatient(data.user);
@@ -347,7 +346,7 @@ export default function Patient() {
               <div className="p-5 border rounded-xl space-y-4">
                 <h2 className="font-bold text-xl text-gray-800 flex items-center gap-2">
                   <Heart className="text-red-500" /> Medical History
-      _         </h2>
+               </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <EditableField
                     label="Chronic Diseases"
@@ -364,7 +363,7 @@ export default function Patient() {
                   <EditableField
                     label="Past Surgeries"
                     value={ isEditing ? editableRecord.pastSurgeries.join(", ") : record.pastSurgeries?.join(", ") || ""}
-                   onChange={(e) => handleArrayFieldChange("pastSurgeries", e.target.value)}
+                  onChange={(e) => handleArrayFieldChange("pastSurgeries", e.target.value)}
                     isEditing={isEditing}
                   />
                   <EditableField
@@ -401,7 +400,7 @@ export default function Patient() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                       <input 
-                        type="date"
+                       type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         min={new Date().toISOString().split("T")[0]} 
@@ -427,7 +426,7 @@ export default function Patient() {
                       value={appointmentReason}
                       onChange={(e) => setAppointmentReason(e.target.value)}
                       className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            _       />
+                  />
                   </div>
                   
                   <button
