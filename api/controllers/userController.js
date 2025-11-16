@@ -62,7 +62,21 @@ export const updateUser = asyncHandler(async (req, res) => {
     user.profileImage = req.file.path;
   }
 
-  const updatedUser = await user.save();
+    // ------------------- DOCTOR -------------------
+    if (role === 'doctor') {
+      const doctorDetails = new DoctorDetails({
+        user: user._id,
+        specialty,
+        qualifications,
+        yearsOfExperience,
+        consultationFee,
+        schedule: schedule ? JSON.parse(schedule) : [],
+        languages,
+        bio,
+        notes: notes || '',
+        profileImage: req.file ? req.file.path : null,
+        hospital
+      });
 
   if (user.role === 'doctor' && specialty) {
     const doctorDetails = await DoctorDetails.findOne({ user: user._id });
